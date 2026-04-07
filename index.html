@@ -605,6 +605,16 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         </div>
         <div class="mfg"><label>Year</label><input id="f-year" type="number" placeholder="2020"/></div>
       </div>
+      <div class="mfrow" style="margin-bottom:4px;">
+        <div class="mfg" style="flex-direction:row;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;">
+          <input type="checkbox" id="f-personal" onchange="togglePersonalMode(this.checked)" style="width:16px;height:16px;accent-color:var(--purple);cursor:pointer;flex-shrink:0;"/>
+          <div>
+            <label for="f-personal" style="font-size:13px;color:var(--txt);cursor:pointer;text-transform:none;letter-spacing:0;">Personal vehicle</label>
+            <div style="font-size:11px;color:var(--txt3);margin-top:1px;">Personal vehicles are tracked but excluded from financial reports &amp; revenue KPIs</div>
+          </div>
+        </div>
+      </div>
+      <div id="f-fee-section">
       <div class="mfg" style="margin-bottom:12px;"><label style="display:block;margin-bottom:8px;">Fee structure</label>
         <div class="fee-types">
           <button class="fee-type-btn active" onclick="selFee('monthly',this)">Fixed monthly</button>
@@ -615,6 +625,16 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       <div class="mfrow">
         <div class="mfg"><label id="fee-lbl">Monthly rent (LKR)</label><input id="f-rent" type="number" placeholder="35000"/></div>
         <div class="mfg"><label>Due day of month</label><input id="f-dueday" type="number" min="1" max="28" placeholder="5"/></div>
+      </div>
+      </div><!-- end f-fee-section -->
+      <div id="f-driver-section">
+      <div id="f-existing-driver-row" style="margin-bottom:10px;">
+        <div class="mfg">
+          <label>Select existing driver <span style="font-weight:400;color:var(--txt3)">(optional — auto-fills fields below)</span></label>
+          <select id="f-existing-driver" onchange="fillDriverFromSelect(this.value)" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+            <option value="">— Type manually or pick existing —</option>
+          </select>
+        </div>
       </div>
       <div class="mfrow">
         <div class="mfg"><label>Driver name</label><input id="f-driver" placeholder="Full name"/></div>
@@ -632,6 +652,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <div class="mfg"><label>Security deposit (LKR)</label><input id="f-deposit" type="number" placeholder="50000"/></div>
         <div class="mfg"><label>Rental start date</label><input id="f-start" type="date"/></div>
       </div>
+      </div><!-- end f-driver-section -->
       <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;">Document expiry dates</div>
       <div class="mfrow-3">
         <div class="mfg"><label>Revenue license</label><input id="f-doc-rl" type="date"/></div>
@@ -738,6 +759,25 @@ body{display:flex;flex-direction:column;min-height:100vh;}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('odo-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="confirmOdo()">Save reading</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARK SERVICE DONE MODAL -->
+<div class="modal-overlay" id="service-done-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head"><h3>Mark service done</h3><button class="modal-close" onclick="closeModal('service-done-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--txt3);margin-bottom:16px;">Enter the current odometer reading to reset the service counter. This will update "Last service" and restart the km/month interval.</p>
+      <div class="mfrow">
+        <div class="mfg"><label>Service date</label><input id="svc-date" type="date"/></div>
+        <div class="mfg"><label>Odometer at service (km)</label><input id="svc-odo" type="number" placeholder="e.g. 58000"/></div>
+      </div>
+      <div class="mfg"><label>Notes (optional)</label><input id="svc-note" placeholder="e.g. Oil change, filter replaced..."/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('service-done-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmServiceDone()">Save &amp; reset</button>
     </div>
   </div>
 </div>
@@ -1072,44 +1112,48 @@ function renderSidebar(){
 function renderOverview(){
   document.getElementById('ov-date').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const cm=curMonth();
-  const monthly=vehicles.reduce((s,v)=>s+(v.feeType!=='daily'?v.rent:0),0);
-  const collected=vehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
-  const partialCollected=vehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='partial');return s+(p?p.paidAmount||0:0);},0);
-  const due=vehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&(p.paid==='pending'||p.paid==='overdue'));return s+(p?p.amount:0);},0);
-  const ov=vehicles.filter(v=>getStatus(v)==='overdue').length;
+  const rv=vehicles.filter(v=>!v.personal);
+  const monthly=rv.reduce((s,v)=>s+(v.feeType!=='daily'?v.rent:0),0);
+  const collected=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
+  const partialCollected=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='partial');return s+(p?p.paidAmount||0:0);},0);
+  const due=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&(p.paid==='pending'||p.paid==='overdue'));return s+(p?p.amount:0);},0);
+  const ov=rv.filter(v=>getStatus(v)==='overdue').length;
   const colPct=monthly>0?Math.round((collected+partialCollected)/monthly*100):0;
   document.getElementById('ov-monthly').textContent=fmt(monthly);
   document.getElementById('ov-collected').textContent=fmt(collected+partialCollected);
   document.getElementById('ov-col-pct').textContent=colPct+'% of monthly target';
   document.getElementById('ov-due').textContent=fmt(due);
-  document.getElementById('ov-due-veh').textContent=vehicles.filter(v=>{const p=v.payments.find(p=>p.month===cm&&p.paid!=='paid');return!!p;}).length+' vehicles pending';
+  document.getElementById('ov-due-veh').textContent=rv.filter(v=>{const p=v.payments.find(p=>p.month===cm&&p.paid!=='paid');return!!p;}).length+' vehicles pending';
   document.getElementById('ov-overdue').textContent=ov;
   const grid=document.getElementById('fleet-grid');
   if(!vehicles.length){grid.innerHTML='<div class="empty-state">No vehicles yet.<p>Click "+ Add vehicle" to get started.</p></div>';return;}
   grid.innerHTML=vehicles.map(v=>{
-    const st=getStatus(v);const cm2=curMonth();const cp=v.payments.find(p=>p.month===cm2);
+    const st=v.personal?'active':getStatus(v);const cm2=curMonth();const cp=v.payments.find(p=>p.month===cm2);
     const nd=getDueDate(v.dueDay);const diff=daysDiff(todayStr,nd);
     const totalPaid=v.payments.filter(p=>p.paid==='paid').reduce((s,p)=>s+(p.paidAmount||p.amount),0);
     const ci=aci(v.driver);
-    const pillCls=st==='overdue'?'pill-overdue':st==='due'?'pill-due':'pill-active';
-    const pillTxt=st==='overdue'?'Overdue':st==='due'?'Due soon':'Active';
+    const pillCls=v.personal?'':''+( st==='overdue'?'pill-overdue':st==='due'?'pill-due':'pill-active');
+    const pillTxt=v.personal?'Personal':st==='overdue'?'Overdue':st==='due'?'Due soon':'Active';
+    const pillStyle=v.personal?'background:var(--purple-pale);color:var(--purple);border:0.5px solid rgba(139,111,212,0.3);':'';
     const dueStr=st==='overdue'?`${Math.abs(diff)}d overdue`:`${diff}d left`;
-    const fine=cp?calcFine(cp,v):0;
+    const fine=(!v.personal&&cp)?calcFine(cp,v):0;
     return `<div class="fleet-card status-${st}" onclick="showVehicle(${v.id})">
       <div class="fc-top">
         <div class="fc-vehicle">
           <div class="type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>
           <div><div class="fc-name">${v.name}</div><div class="fc-plate">${v.plate}</div></div>
         </div>
-        <span class="status-pill ${pillCls}">${pillTxt}</span>
+        <span class="status-pill ${pillCls}" style="${pillStyle}">${pillTxt}</span>
       </div>
-      <div class="fc-fee">${fmt(v.rent)}<span>${feeShort(v)}</span></div>
+      ${v.personal
+        ? `<div style="font-size:12px;color:var(--txt3);padding:8px 0;border-top:0.5px solid var(--bdr);">Personal use — not included in revenue reports</div>`
+        : `<div class="fc-fee">${fmt(v.rent)}<span>${feeShort(v)}</span></div>
       <div class="fc-row"><span class="fc-row-label">Next due</span><span class="fc-row-val ${st==='overdue'?'r':st==='due'?'a':''}">${new Date(nd).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} (${dueStr})</span></div>
       <div class="fc-row"><span class="fc-row-label">This month</span><span class="fc-row-val ${cp?.paid==='paid'?'g':cp?.paid==='partial'?'':cp?.paid==='overdue'?'r':'a'}">
         ${cp?.paid==='paid'?'Paid':cp?.paid==='partial'?fmt(cp.paidAmount||0)+' partial':'Unpaid'}
         ${fine>0?`<span class="fine-badge">+${fmt(fine)} fine</span>`:''}
       </span></div>
-      <div class="fc-row"><span class="fc-row-label">Total collected</span><span class="fc-row-val g">${fmt(totalPaid)}</span></div>
+      <div class="fc-row"><span class="fc-row-label">Total collected</span><span class="fc-row-val g">${fmt(totalPaid)}</span></div>`}
       <div class="fc-driver">
         <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${avBg[ci]};color:${avFg[ci]}">${initials(v.driver)}</div>
         <span style="font-size:13px;color:var(--txt2)">${v.driver}</span>
@@ -1285,19 +1329,21 @@ function showDriverDetail(idx){
 function renderReports(){
   const cm=curMonth();
   document.getElementById('rep-month-label').textContent=cm;
+  // Exclude personal vehicles from all financial reports
+  const rentalVehicles=vehicles.filter(v=>!v.personal);
   // KPIs
-  const totalExpected=vehicles.reduce((s,v)=>s+(v.feeType!=='daily'?v.rent:0),0);
-  const totalCollected=vehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
-  const totalExpenses=vehicles.reduce((s,v)=>s+(v.expenses||[]).reduce((ss,e)=>ss+e.amount,0),0);
-  const ytd=getYTDData();const ytdTotal=ytd.reduce((s,m)=>s+m.collected,0);
+  const totalExpected=rentalVehicles.reduce((s,v)=>s+(v.feeType!=='daily'?v.rent:0),0);
+  const totalCollected=rentalVehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
+  const totalExpenses=rentalVehicles.reduce((s,v)=>s+(v.expenses||[]).reduce((ss,e)=>ss+e.amount,0),0);
+  const ytd=getYTDData(rentalVehicles);const ytdTotal=ytd.reduce((s,m)=>s+m.collected,0);
   document.getElementById('rep-kpis').innerHTML=`
     <div class="kpi"><div class="kpi-label">Expected this month</div><div class="kpi-val">${fmt(totalExpected)}</div></div>
     <div class="kpi"><div class="kpi-label">Collected this month</div><div class="kpi-val g">${fmt(totalCollected)}</div><div class="kpi-sub">${totalExpected>0?Math.round(totalCollected/totalExpected*100):0}% of target</div></div>
     <div class="kpi"><div class="kpi-label">Total expenses (all time)</div><div class="kpi-val r">${fmt(totalExpenses)}</div></div>
     <div class="kpi"><div class="kpi-label">YTD income</div><div class="kpi-val g">${fmt(ytdTotal)}</div><div class="kpi-sub">year to date</div></div>`;
   // per-vehicle bars
-  const maxRent=Math.max(...vehicles.map(v=>v.rent),1);
-  document.getElementById('rep-vehicle-bars').innerHTML=vehicles.map(v=>{
+  const maxRent=Math.max(...rentalVehicles.map(v=>v.rent),1);
+  document.getElementById('rep-vehicle-bars').innerHTML=rentalVehicles.map(v=>{
     const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');
     const paid=p?p.paidAmount||p.amount:0;
     const pct=Math.round(paid/v.rent*100);
@@ -1317,7 +1363,7 @@ function renderReports(){
     </div>`).join('');
   document.getElementById('rep-ytd-labels').innerHTML=ytd.map(m=>`<div class="ytd-label" style="flex:1;text-align:center">${m.label.split(' ')[0]}</div>`).join('');
   // profit bars
-  document.getElementById('rep-profit-bars').innerHTML=vehicles.map(v=>{
+  document.getElementById('rep-profit-bars').innerHTML=rentalVehicles.map(v=>{
     const income=v.payments.filter(p=>p.paid==='paid').reduce((s,p)=>s+(p.paidAmount||p.amount),0);
     const expenses=(v.expenses||[]).reduce((s,e)=>s+e.amount,0);
     const profit=income-expenses;
@@ -1338,7 +1384,7 @@ function renderReports(){
     </div>`;
   }).join('');
   // summary table
-  const rows=vehicles.map(v=>{
+  const rows=rentalVehicles.map(v=>{
     const p=v.payments.find(p=>p.month===cm);
     const paid=p&&p.paid==='paid'?p.paidAmount||p.amount:p&&p.paid==='partial'?p.paidAmount||0:0;
     return `<tr><td>${v.name}</td><td style="text-align:right">${fmt(v.rent)}</td><td style="text-align:right;color:${paid>=v.rent?'var(--teal-glow)':'var(--amber)'}">${fmt(paid)}</td><td style="text-align:right;color:var(--txt3)">${fmt(v.rent-paid)}</td></tr>`;
@@ -1348,13 +1394,14 @@ function renderReports(){
     <tbody>${rows}</tbody>`;
 }
 
-function getYTDData(){
+function getYTDData(vlist){
+  const list=vlist||vehicles;
   const months=[];
   for(let i=0;i<12;i++){
     const d=new Date(today.getFullYear(),i,1);
     if(d>today)break;
     const lbl=monthLabel(d);
-    const collected=vehicles.reduce((s,v)=>{const p=v.payments.find(p=>p.month===lbl&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
+    const collected=list.reduce((s,v)=>{const p=v.payments.find(p=>p.month===lbl&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
     months.push({label:lbl,collected});
   }
   return months;
@@ -1363,7 +1410,7 @@ function getYTDData(){
 function exportCSV(){
   const cm=curMonth();
   let csv='Vehicle,Plate,Driver,Expected,Collected,Balance,Status\n';
-  vehicles.forEach(v=>{
+  vehicles.filter(v=>!v.personal).forEach(v=>{
     const p=v.payments.find(p=>p.month===cm);
     const paid=p&&p.paid==='paid'?p.paidAmount||p.amount:0;
     csv+=`"${v.name}","${v.plate}","${v.driver}",${v.rent},${paid},${v.rent-paid},${p?.paid||'pending'}\n`;
@@ -1489,7 +1536,10 @@ function buildVehiclePage(v){
       <tr><td>Next service due</td><td>${nextServDate?nextServDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</td></tr>
       <tr><td>Next service odo</td><td>${nextOdo?nextOdo.toLocaleString()+' km':'—'}</td></tr>
       <tr><td>Service interval</td><td>${v.servKm?v.servKm.toLocaleString()+' km':'—'} / ${v.servMonths?v.servMonths+' months':'—'}</td></tr>
-    </table>`;
+    </table>
+    <div style="margin-top:12px;">
+      <button class="btn btn-primary btn-sm" onclick="openMarkServiceDone(${v.id})">✓ Mark service done &amp; reset odometer</button>
+    </div>`;
   }
 
   // odometer
@@ -2009,12 +2059,22 @@ function selFee(t,btn){
 function openAddModal(){
   document.getElementById('f-start').value=todayStr;
   document.getElementById('f-dueday').value='5';
-  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes'].forEach(id=>{
+  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('f-type').value='Car';feeTypeSel='monthly';
   document.querySelectorAll('.fee-type-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.getElementById('fee-lbl').textContent='Monthly rent (LKR)';
+  const personalCb=document.getElementById('f-personal');if(personalCb)personalCb.checked=false;
+  const driverSection=document.getElementById('f-driver-section');if(driverSection)driverSection.style.display='';
+  const feeSection=document.getElementById('f-fee-section');if(feeSection)feeSection.style.display='';
+  // Populate existing drivers dropdown
+  const driverSel=document.getElementById('f-existing-driver');
+  if(driverSel){
+    const allDrivers=getAllDrivers();
+    driverSel.innerHTML='<option value="">— Type manually or pick existing —</option>'+
+      allDrivers.map((d,i)=>`<option value="${i}">${d.name}${d.phone?' · '+d.phone:''}${d.nic?' · '+d.nic:''}</option>`).join('');
+  }
   openModal('add-modal');
 }
 function addVehicle(){
@@ -2033,6 +2093,7 @@ function addVehicle(){
   const depositAmt=parseInt(document.getElementById('f-deposit').value)||0;
   const startDate=document.getElementById('f-start').value;
   const notes=document.getElementById('f-notes').value.trim();
+  const isPersonal=document.getElementById('f-personal')?.checked||false;
   const docRL=document.getElementById('f-doc-rl').value;
   const docIns=document.getElementById('f-doc-ins').value;
   const docEmi=document.getElementById('f-doc-emi').value;
@@ -2042,9 +2103,10 @@ function addVehicle(){
   const servKm=parseInt(document.getElementById('f-serv-km').value)||null;
   const servMonths=parseInt(document.getElementById('f-serv-mo').value)||null;
   const initOdo=parseInt(document.getElementById('f-init-odo').value)||0;
-  if(!name||!plate||!rent||!driver||!startDate){alert('Please fill in all required fields.');return;}
+  if(!name||!plate||!startDate){alert('Please fill in name, plate, and start date.');return;}
+  if(!isPersonal&&(!rent||!driver)){alert('Please fill in all required fields.');return;}
   const startOdoLog=initOdo?[{id:Date.now(),date:new Date(startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),reading:initOdo,note:'Initial reading'}]:[];
-  const v={id:nid++,name,plate,type,year,feeType:feeTypeSel,rent,driver,phone,nic,license,emergName,emergPhone,startDate,dueDay,notes,
+  const v={id:nid++,name,plate,type,year,feeType:feeTypeSel,rent:rent||0,driver:driver||'(Personal)',phone,nic,license,emergName,emergPhone,startDate,dueDay,notes,personal:isPersonal,
     deposit:{amount:depositAmt,status:'held',date:today.toLocaleDateString('en-GB')},
     docs:{revLicense:docRL,insurance:docIns,emission:docEmi,fitness:docFit,roadPermit:docRP,vat:docVAT},
     servKm,servMonths,lastServDate:null,lastServOdometer:initOdo||null,
@@ -2057,6 +2119,27 @@ function addVehicle(){
   renderSidebar();renderOverview();showVehicle(v.id);
   window._db.saveVehicle(v);
   window._db.saveMeta({nid, ndid});
+}
+
+function togglePersonalMode(isPersonal){
+  // When personal, hide rental/driver-specific fields
+  const rentalFields=['f-existing-driver-row','f-fee-structure-row','f-fee-amounts-row','f-driver-row','f-nic-row','f-emerg-row','f-deposit-row'];
+  // Use a simpler approach: just show/hide the driver section wrapper
+  const driverSection=document.getElementById('f-driver-section');
+  const feeSection=document.getElementById('f-fee-section');
+  if(driverSection) driverSection.style.display=isPersonal?'none':'';
+  if(feeSection) feeSection.style.display=isPersonal?'none':'';
+}
+function fillDriverFromSelect(idx){
+  if(idx==='') return;
+  const d=getAllDrivers()[parseInt(idx)];
+  if(!d) return;
+  document.getElementById('f-driver').value=d.name||'';
+  document.getElementById('f-phone').value=d.phone||'';
+  document.getElementById('f-nic').value=d.nic||'';
+  document.getElementById('f-license').value=d.license||'';
+  document.getElementById('f-emerg-name').value=d.emergName||'';
+  document.getElementById('f-emerg-phone').value=d.emergPhone||'';
 }
 
 // ── DELETE VEHICLE ────────────────────────────────────────────
@@ -2229,8 +2312,42 @@ function confirmOdo(){
 }
 
 
+// ── SERVICE DONE / ODOMETER RESET ────────────────────────────
+let serviceDoneCtx = null;
+function openMarkServiceDone(vid){
+  serviceDoneCtx = {vid};
+  const v = vehicles.find(x=>x.id===vid);
+  const lastOdo = (v.odometerLog||[]).length ? v.odometerLog[v.odometerLog.length-1].reading : (v.lastServOdometer||'');
+  document.getElementById('svc-date').value = todayStr;
+  document.getElementById('svc-odo').value = lastOdo||'';
+  document.getElementById('svc-odo').placeholder = lastOdo ? 'Last: '+Number(lastOdo).toLocaleString()+' km' : 'e.g. 58000';
+  document.getElementById('svc-note').value = '';
+  openModal('service-done-modal');
+}
+function confirmServiceDone(){
+  if(!serviceDoneCtx) return;
+  const v = vehicles.find(x=>x.id===serviceDoneCtx.vid);
+  const odo = parseInt(document.getElementById('svc-odo').value);
+  const dateRaw = document.getElementById('svc-date').value;
+  const note = document.getElementById('svc-note').value.trim();
+  if(!odo){alert('Please enter the odometer reading at time of service.');return;}
+  const lastOdo = (v.odometerLog||[]).length ? v.odometerLog[v.odometerLog.length-1].reading : null;
+  if(lastOdo && odo < lastOdo){
+    if(!confirm(`Reading ${odo.toLocaleString()} km is less than last recorded ${lastOdo.toLocaleString()} km. Save anyway?`)) return;
+  }
+  // Reset service baseline
+  v.lastServDate = dateRaw;
+  v.lastServOdometer = odo;
+  // Also log this as an odometer entry
+  if(!v.odometerLog) v.odometerLog=[];
+  const dateStr = new Date(dateRaw).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  v.odometerLog.push({id:Date.now(),date:dateStr,reading:odo,note:'✓ Service done'+(note?' — '+note:'')});
+  closeModal('service-done-modal');
+  serviceDoneCtx = null;
+  refreshVehicle(v.id);
+}
+
 let deleteDriverIdx = null;
-function deleteDriver(idx){
   const d = getAllDrivers()[idx];
   deleteDriverIdx = idx;
   const hasVehicles = d.vehicles.length > 0;
