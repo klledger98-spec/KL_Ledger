@@ -355,6 +355,35 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .partial-bar{height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;margin-top:4px;}
 .partial-fill{height:100%;background:var(--blue);border-radius:2px;}
 
+/* ── STORAGE METER ── */
+.storage-bar-track{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.storage-bar-fill{height:100%;border-radius:3px;transition:width .6s;}
+
+/* ── HANDOVER PHOTOS ── */
+.photo-upload-zone{border:1.5px dashed var(--bdr2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:12px;background:var(--bg3);}
+.photo-upload-zone:hover,.photo-upload-zone.drag-over{border-color:var(--teal);background:var(--teal-pale);}
+.photo-upload-zone input[type=file]{display:none;}
+.photo-upload-label{font-size:13px;color:var(--txt3);}
+.photo-upload-label span{color:var(--teal-glow);font-weight:500;cursor:pointer;}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:12px;}
+.photo-thumb-wrap{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--bg4);}
+.photo-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-thumb-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.photo-upload-progress{font-size:12px;color:var(--teal-glow);margin-bottom:8px;min-height:18px;}
+.handover-photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px;}
+.handover-photo-item{border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--bg4);cursor:pointer;position:relative;}
+.handover-photo-item img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .15s;}
+.handover-photo-item:hover img{opacity:.85;}
+.handover-photo-item::after{content:'🔍';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:0;transition:opacity .15s;}
+.handover-photo-item:hover::after{opacity:1;}
+/* lightbox */
+.photo-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;flex-direction:column;}
+.photo-lightbox.open{display:flex;}
+.photo-lightbox img{max-width:92vw;max-height:82vh;border-radius:10px;object-fit:contain;}
+.photo-lightbox-close{position:absolute;top:18px;right:22px;font-size:24px;color:#fff;background:none;border:none;cursor:pointer;opacity:.8;}
+.photo-lightbox-close:hover{opacity:1;}
+.photo-lightbox-caption{color:rgba(255,255,255,.55);font-size:12px;margin-top:10px;}
+
 /* ── FINE BADGE ── */
 .fine-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--red-pale);color:var(--red);font-weight:500;}
 
@@ -443,10 +472,12 @@ body{display:flex;flex-direction:column;min-height:100vh;}
     <div id="v-nav-list"></div>
   </div>
   <div class="sidebar-footer">
-    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
       <span style="font-size:11px;color:var(--txt3);flex:1;">Theme</span>
       <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
     </div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:6px;" id="db-status">🟡 Connecting…</div>
+    <div id="storage-meter" style="margin-bottom:10px;"></div>
     <button class="add-v-btn" onclick="openAddModal()">+ Add vehicle</button>
   </div>
 </aside>
@@ -752,6 +783,213 @@ body{display:flex;flex-direction:column;min-height:100vh;}
   </div>
 </div><!-- end .layout -->
 
+<!-- PHOTO LIGHTBOX -->
+<div class="photo-lightbox" id="photo-lightbox" onclick="closeLightbox()">
+  <button class="photo-lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="Handover photo"/>
+  <div class="photo-lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCKGCgaGfoa975OkrC5n0u07HcFJpAXWFs",
+  authDomain: "klledger-98b57.firebaseapp.com",
+  projectId: "klledger-98b57",
+  storageBucket: "klledger-98b57.firebasestorage.app",
+  messagingSenderId: "630895531165",
+  appId: "1:630895531165:web:afc3c646e7977aadf73074",
+  measurementId: "G-V3ELVRLFVK"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp, 'gs://klledger-98b57.firebasestorage.app');
+
+// ── FIRESTORE SAVE HELPERS ────────────────────────────────────
+async function saveVehicle(v) {
+  try { await setDoc(doc(db, 'vehicles', String(v.id)), v); }
+  catch(e) { console.error('Save vehicle failed:', e); }
+}
+async function removeVehicle(id) {
+  try { await deleteDoc(doc(db, 'vehicles', String(id))); }
+  catch(e) { console.error('Delete vehicle failed:', e); }
+}
+async function saveDriver(d) {
+  try { await setDoc(doc(db, 'drivers', String(d.id)), d); }
+  catch(e) { console.error('Save driver failed:', e); }
+}
+async function removeDriver(id) {
+  try { await deleteDoc(doc(db, 'drivers', String(id))); }
+  catch(e) { console.error('Delete driver failed:', e); }
+}
+async function saveMeta(data) {
+  try { await setDoc(doc(db, 'meta', 'counters'), data); }
+  catch(e) { console.error('Save meta failed:', e); }
+}
+
+// ── STORAGE: PHOTO UPLOAD ─────────────────────────────────────
+// Returns array of download URLs (or base64 data URLs as fallback)
+async function uploadHandoverPhotos(vid, handoverId, files, onProgress) {
+  const urls = [];
+  for (const file of files) {
+    // Compress image first
+    const compressed = await compressImage(file, 1200, 0.82);
+    // Try Firebase upload with a 20-second timeout
+    let url = null;
+    try {
+      url = await Promise.race([
+        (async () => {
+          const ext = file.name.split('.').pop();
+          const path = `handovers/${vid}/${handoverId}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpeg`;
+          const storageRef = ref(storage, path);
+          await uploadBytes(storageRef, compressed);
+          return await getDownloadURL(storageRef);
+        })(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Upload timed out after 20 seconds. Check Firebase Storage rules and CORS settings.')), 20000)
+        )
+      ]);
+    } catch(e) {
+      // Fallback: store as base64 data URL so the handover record still has the photo
+      console.warn('Firebase upload failed, falling back to base64:', e.message);
+      url = await blobToDataURL(compressed);
+      // Mark it so user knows it's local only
+      url = url + '#local';
+    }
+    if(url) urls.push(url);
+    if(onProgress) onProgress(urls.length, files.length);
+  }
+  return urls;
+}
+
+// Convert blob to base64 data URL
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Canvas-based image compression
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if(blob) resolve(blob);
+          else reject(new Error('Image compression failed'));
+        }, 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── STORAGE USAGE METER ───────────────────────────────────────
+const STORAGE_FREE_GB = 5; // Firebase Spark plan free tier
+async function calcStorageUsed() {
+  try {
+    let totalBytes = 0;
+    const rootRef = ref(storage, 'handovers');
+    async function sumFolder(folderRef) {
+      const res = await listAll(folderRef);
+      for (const item of res.items) {
+        const meta = await getMetadata(item);
+        totalBytes += meta.size;
+      }
+      for (const sub of res.prefixes) {
+        await sumFolder(sub);
+      }
+    }
+    await sumFolder(rootRef);
+    return totalBytes;
+  } catch(e) {
+    return null; // folder might not exist yet
+  }
+}
+
+async function renderStorageMeter() {
+  const el = document.getElementById('storage-meter');
+  if (!el) return;
+  el.innerHTML = `<span style="color:var(--txt3);font-size:10px">Calculating storage…</span>`;
+  const bytes = await calcStorageUsed();
+  if (bytes === null) {
+    el.innerHTML = `<div style="font-size:10px;color:var(--txt3)">📦 Storage: 0 B used</div><div class="storage-bar-track"><div class="storage-bar-fill" style="width:0%"></div></div><div style="font-size:10px;color:var(--txt3)">5 GB free (Firebase Spark)</div>`;
+    return;
+  }
+  const usedMB = bytes / (1024 * 1024);
+  const freeMB = STORAGE_FREE_GB * 1024;
+  const pct = Math.min(100, (usedMB / freeMB) * 100);
+  const color = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--amber)' : 'var(--teal)';
+  const usedStr = usedMB < 1 ? (bytes / 1024).toFixed(1) + ' KB' : usedMB.toFixed(2) + ' MB';
+  const freeStr = (freeMB - usedMB).toFixed(0) + ' MB free';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt3);margin-bottom:4px;">
+      <span>📦 Photos: ${usedStr}</span><span>${pct.toFixed(1)}%</span>
+    </div>
+    <div class="storage-bar-track">
+      <div class="storage-bar-fill" style="width:${pct}%;background:${color}"></div>
+    </div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:3px;">${freeStr} of ${STORAGE_FREE_GB} GB</div>`;
+}
+
+// expose to global scope
+window._db = { saveVehicle, removeVehicle, saveDriver, removeDriver, saveMeta };
+window._storage = { uploadHandoverPhotos, renderStorageMeter };
+
+// ── REAL-TIME LISTENERS ───────────────────────────────────────
+function startListeners() {
+  onSnapshot(collection(db, 'vehicles'), snap => {
+    vehicles = snap.docs.map(d => d.data());
+    const container = document.getElementById('vehicle-pages');
+    container.innerHTML = vehicles.map(v => buildVehiclePage(v)).join('');
+    renderAll();
+    document.getElementById('db-status').textContent = '🟢 Synced';
+  }, err => {
+    console.error('Vehicle listener error:', err);
+    document.getElementById('db-status').textContent = '🔴 Offline';
+  });
+
+  onSnapshot(collection(db, 'drivers'), snap => {
+    standaloneDrivers = snap.docs.map(d => d.data());
+    renderDrivers();
+  });
+
+  getDoc(doc(db, 'meta', 'counters')).then(snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      nid = d.nid || 1;
+      ndid = d.ndid || 100;
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('db-status').textContent = '🟡 Connecting…';
+  startListeners();
+  // render storage meter after a short delay
+  setTimeout(() => window._storage.renderStorageMeter(), 2000);
+});
+</script>
+
 <script>
 // ── UTILITY ───────────────────────────────────────────────────
 const fmt = n => 'LKR ' + Math.round(n).toLocaleString();
@@ -805,88 +1043,9 @@ function genPayments(v){
 }
 
 // ── DATA ──────────────────────────────────────────────────────
-let vehicles = [
-  {id:1,name:'Toyota Axio',plate:'CAR-2341',type:'Car',year:2019,feeType:'monthly',rent:38000,
-   driver:'Kamal Perera',phone:'071 234 5678',nic:'882341567V',license:'B1234567',
-   emergName:'Nanda Perera',emergPhone:'071 999 1234',
-   startDate:'2024-01-01',dueDay:5,notes:'Regular service due soon.',
-   deposit:{amount:50000,status:'held',date:'01/01/2024'},
-   docs:{revLicense:'2025-09-30',insurance:'2025-07-15',emission:'2025-06-01'},
-   servKm:5000,servMonths:3,lastServDate:'2024-12-15',lastServOdometer:48000,
-   odometerLog:[{id:1,date:'01 Jan 2024',reading:38000,note:'Rental start'},{id:2,date:'15 Jun 2024',reading:44200,note:'Monthly check'},{id:3,date:'15 Dec 2024',reading:48000,note:'Service reading'},{id:4,date:'15 Mar 2025',reading:51200,note:'Return handover'}],
-   expenses:[{id:1,date:'15 Jan 2025',type:'Fuel',desc:'Fuel top-up',amount:4500},{id:2,date:'10 Feb 2025',type:'Maintenance',desc:'Oil change & filter',amount:8500}],
-   handovers:[{id:1,date:'01 Jan 2024',type:'Out',driver:'Kamal Perera',odo:38000,notes:'Good condition'},{id:2,date:'15 Mar 2025',type:'In',driver:'Kamal Perera',odo:51200,notes:'Minor scratch on rear bumper'}],
-   noteEntries:[{id:1,date:'15 Mar 2025',tag:'damage',text:'Minor scratch on rear bumper — photographed. Driver acknowledged.'},{id:2,date:'01 Jan 2024',tag:'inspection',text:'Pre-rental inspection completed. All lights, tyres, and brakes in order.'}],
-   payments:[]},
-  {id:2,name:'Nissan Caravan',plate:'WP-4512',type:'Van',year:2018,feeType:'monthly',rent:65000,
-   driver:'Sunil Fernando',phone:'077 891 2345',nic:'790123456V',license:'B9876543',
-   emergName:'Kanthi Fernando',emergPhone:'077 000 5678',
-   startDate:'2024-03-01',dueDay:10,notes:'',
-   deposit:{amount:75000,status:'held',date:'01/03/2024'},
-   docs:{revLicense:'2026-02-28',insurance:'2025-05-20',emission:'2025-04-10'},
-   servKm:8000,servMonths:6,lastServDate:'2024-11-01',lastServOdometer:92000,
-   odometerLog:[{id:1,date:'01 Mar 2024',reading:85000,note:'Rental start'},{id:2,date:'01 Nov 2024',reading:92000,note:'Service reading'},{id:3,date:'15 Feb 2025',reading:97400,note:'Monthly check'}],
-   expenses:[{id:1,date:'05 Jan 2025',type:'Repair',desc:'Tyre replacement (2 tyres)',amount:18000}],
-   handovers:[{id:1,date:'01 Mar 2024',type:'Out',driver:'Sunil Fernando',odo:85000,notes:'Full tank'}],
-   noteEntries:[{id:1,date:'01 Mar 2024',tag:'inspection',text:'Vehicle handed over in clean condition. All documents valid.'}],
-   payments:[]},
-  {id:3,name:'Mitsubishi Fuso',plate:'NW-1189',type:'Truck',year:2016,feeType:'custom',rent:95000,
-   driver:'Ranjith Silva',phone:'076 456 7890',nic:'751234890V',license:'C2345678',
-   emergName:'Mala Silva',emergPhone:'076 111 2222',
-   startDate:'2023-11-01',dueDay:2,notes:'Negotiated rate.',
-   deposit:{amount:120000,status:'held',date:'01/11/2023'},
-   docs:{revLicense:'2025-11-30',insurance:'2025-10-15',emission:'2025-09-20'},
-   servKm:10000,servMonths:4,lastServDate:'2024-09-01',lastServOdometer:155000,
-   odometerLog:[{id:1,date:'01 Nov 2023',reading:142000,note:'Rental start'},{id:2,date:'01 Sep 2024',reading:155000,note:'Service reading'},{id:3,date:'01 Jan 2025',reading:163500,note:'Monthly check'}],
-   expenses:[{id:1,date:'20 Nov 2024',type:'Repair',desc:'Brake pad replacement',amount:22000},{id:2,date:'10 Dec 2024',type:'Maintenance',desc:'Full service',amount:35000}],
-   handovers:[{id:1,date:'01 Nov 2023',type:'Out',driver:'Ranjith Silva',odo:142000,notes:'Tyres at 60%'}],
-   noteEntries:[{id:1,date:'20 Nov 2024',tag:'maintenance',text:'Brake pads worn. Replaced front and rear. Advised driver to report any brake noise immediately.'}],
-   payments:[]},
-  {id:4,name:'Honda CB400',plate:'MC-0023',type:'Bike',year:2021,feeType:'daily',rent:3500,
-   driver:'Thilak Bandara',phone:'078 567 1234',nic:'921234567V',license:'A7654321',
-   emergName:'Priya Bandara',emergPhone:'078 999 0000',
-   startDate:'2024-06-01',dueDay:15,notes:'',
-   deposit:{amount:20000,status:'refunded',date:'01/06/2024',refundDate:'15 Jan 2025'},
-   docs:{revLicense:'2025-12-31',insurance:'2025-08-30',emission:''},
-   servKm:3000,servMonths:3,lastServDate:'2025-01-10',lastServOdometer:12000,
-   odometerLog:[{id:1,date:'01 Jun 2024',reading:8500,note:'Rental start'},{id:2,date:'10 Jan 2025',reading:12000,note:'Service reading'},{id:3,date:'01 Mar 2025',reading:13800,note:'Monthly check'}],
-   expenses:[],
-   handovers:[{id:1,date:'01 Jun 2024',type:'Out',driver:'Thilak Bandara',odo:8500,notes:'New chain fitted'}],
-   noteEntries:[],
-   payments:[]},
-  {id:5,name:'Toyota HiAce',plate:'SP-8811',type:'Van',year:2020,feeType:'monthly',rent:72000,
-   driver:'Nimal Jayasekara',phone:'070 345 6789',nic:'830987654V',license:'B3456789',
-   emergName:'Seetha Jayasekara',emergPhone:'070 777 4321',
-   startDate:'2024-02-01',dueDay:8,notes:'',
-   deposit:{amount:80000,status:'held',date:'01/02/2024'},
-   docs:{revLicense:'2025-04-30',insurance:'2026-01-15',emission:'2025-05-15'},
-   servKm:5000,servMonths:3,lastServDate:'2024-12-20',lastServOdometer:67000,
-   odometerLog:[{id:1,date:'01 Feb 2024',reading:55000,note:'Rental start'},{id:2,date:'20 Dec 2024',reading:67000,note:'Service reading'},{id:3,date:'20 Mar 2025',reading:71200,note:'Monthly check'}],
-   expenses:[{id:1,date:'22 Jan 2025',type:'Fuel',desc:'Fuel allowance',amount:6000}],
-   handovers:[{id:1,date:'01 Feb 2024',type:'Out',driver:'Nimal Jayasekara',odo:55000,notes:'Clean interior'}],
-   noteEntries:[{id:1,date:'01 Feb 2024',tag:'inspection',text:'Vehicle in excellent condition. All seat belts functional.'}],
-   payments:[]},
-  {id:6,name:'Tata Prima',plate:'SG-3302',type:'Truck',year:2017,feeType:'monthly',rent:88000,
-   driver:'Pradeep Kumara',phone:'072 678 9012',nic:'860543219V',license:'C8765432',
-   emergName:'Kamani Kumara',emergPhone:'072 555 6677',
-   startDate:'2023-09-01',dueDay:3,notes:'',
-   deposit:{amount:100000,status:'held',date:'01/09/2023'},
-   docs:{revLicense:'2025-08-31',insurance:'2025-07-01',emission:'2025-03-20'},
-   servKm:10000,servMonths:6,lastServDate:'2024-08-01',lastServOdometer:198000,
-   odometerLog:[{id:1,date:'01 Sep 2023',reading:180000,note:'Rental start'},{id:2,date:'01 Aug 2024',reading:198000,note:'Service reading'},{id:3,date:'01 Feb 2025',reading:207500,note:'Monthly check'}],
-   expenses:[{id:1,date:'15 Dec 2024',type:'Repair',desc:'Alternator replacement',amount:45000},{id:2,date:'01 Jan 2025',type:'Maintenance',desc:'Coolant flush',amount:5500}],
-   handovers:[{id:1,date:'01 Sep 2023',type:'Out',driver:'Pradeep Kumara',odo:180000,notes:'Some rust on left panel'}],
-   noteEntries:[{id:1,date:'01 Sep 2023',tag:'damage',text:'Pre-existing rust noted on left body panel. Documented before handover.'}],
-   payments:[]}
-];
-vehicles.forEach(v=>{v.payments=genPayments(v);});
-
-// standalone drivers (not yet linked to a vehicle)
-let standaloneDrivers = [
-  {id:101,name:'Mahesh Wijesuriya',phone:'075 111 2222',nic:'941122334V',license:'B9988776',emergName:'Mrs. Wijesuriya',emergPhone:'075 333 4444'}
-];
-
-let nid=20, ndid=200, feeTypeSel='monthly', deleteId=null;
+let vehicles = [];
+let standaloneDrivers = [];
+let nid=1, ndid=100, feeTypeSel='monthly', deleteId=null;
 let partialCtx=null, expenseCtx=null, handoverCtx=null, noteCtx=null;
 let alertFilter='all';
 
@@ -1292,8 +1451,15 @@ function buildVehiclePage(v){
   </div>`;
 
   // handovers
-  const handoverRows=(v.handovers||[]).slice().reverse().map(h=>`
-    <div class="handover-entry">
+  const handoverRows=(v.handovers||[]).slice().reverse().map(h=>{
+    const photosHtml = (h.photos && h.photos.length) ? `
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📸 ${h.photos.length} photo${h.photos.length!==1?'s':''}</div>
+        <div class="handover-photos-grid">
+          ${h.photos.map((url,i)=>{const cleanUrl=url.replace('#local','');const isLocal=url.endsWith('#local');return `<div class="handover-photo-item" onclick="openLightbox('${cleanUrl}','${h.type==='Out'?'Handover OUT':'Return IN'} — ${h.date} · Photo ${i+1}')"><img src="${cleanUrl}" alt="Photo ${i+1}" loading="lazy"/>${isLocal?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fa0;font-size:9px;text-align:center;padding:2px">local only</div>':''}</div>`;}).join('')}
+        </div>
+      </div>` : '';
+    return `<div class="handover-entry">
       <h5>${h.type==='Out'?'🚗 Handover OUT':'🔁 Return IN'} — ${h.date}</h5>
       <div class="handover-grid">
         <div class="hg-item"><label>Driver</label><div class="hg-val">${h.driver}</div></div>
@@ -1301,7 +1467,9 @@ function buildVehiclePage(v){
         <div class="hg-item"><label>Notes</label><div class="hg-val" style="font-size:12px;color:var(--txt2)">${h.notes||'—'}</div></div>
         <div class="hg-item"><label>Distance</label><div class="hg-val g">${getHandoverDist(v,h)}</div></div>
       </div>
-    </div>`).join('');
+      ${photosHtml}
+    </div>`;
+  }).join('');
 
   // notes
   const noteRows=(v.noteEntries||[]).slice().reverse().map(n=>`
@@ -1695,7 +1863,7 @@ function confirmExpense(){
 
 // ── HANDOVER ACTIONS ──────────────────────────────────────────
 function openHandover(vid){
-  handoverCtx={vid};
+  handoverCtx={vid, pendingFiles:[]};
   document.getElementById('handover-modal-body').innerHTML=`
     <div class="mfrow">
       <div class="mfg"><label>Type</label><select id="hov-type" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"><option value="Out">Handover OUT (to driver)</option><option value="In">Return IN (from driver)</option></select></div>
@@ -1705,12 +1873,23 @@ function openHandover(vid){
       <div class="mfg"><label>Driver name</label><input id="hov-driver" placeholder="Driver name" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"></div>
       <div class="mfg"><label>Odometer (km)</label><input id="hov-odo" type="number" placeholder="e.g. 52000" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"></div>
     </div>
-    <div class="mfg"><label>Notes</label><textarea id="hov-notes" placeholder="Condition, fuel level, damage notes..." style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;resize:vertical;min-height:70px;font-family:var(--font-body)"></textarea></div>`;
+    <div class="mfg" style="margin-bottom:12px;"><label>Notes</label><textarea id="hov-notes" placeholder="Condition, fuel level, damage notes..." style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;resize:vertical;min-height:70px;font-family:var(--font-body)"></textarea></div>
+    <div class="mfg">
+      <label>Photos <span style="font-weight:400;color:var(--txt3)">(optional — drag & drop or click)</span></label>
+      <div class="photo-upload-zone" id="hov-dropzone" onclick="document.getElementById('hov-photo-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="event.preventDefault();this.classList.remove('drag-over');handleHovPhotoFiles(event.dataTransfer.files)">
+        <input type="file" id="hov-photo-input" multiple accept="image/*" onchange="handleHovPhotoFiles(this.files)">
+        <div class="photo-upload-label">📸 <span>Browse photos</span> or drag & drop<br><span style="font-size:11px;color:var(--txt3)">JPG, PNG, HEIC · Auto-compressed before upload</span></div>
+      </div>
+      <div class="photo-preview-grid" id="hov-preview-grid"></div>
+    </div>`;
   const v=vehicles.find(x=>x.id===vid);
   document.getElementById('hov-driver').value=v.driver;
   openModal('handover-modal');
 }
-function confirmHandover(){
+async function confirmHandover(){
   if(!handoverCtx)return;
   const v=vehicles.find(x=>x.id===handoverCtx.vid);
   const type=document.getElementById('hov-type').value;
@@ -1718,12 +1897,86 @@ function confirmHandover(){
   const driver=document.getElementById('hov-driver').value.trim();
   const odo=parseInt(document.getElementById('hov-odo').value)||null;
   const notes=document.getElementById('hov-notes').value.trim();
+  const handoverId = Date.now();
+  // show uploading state
+  const saveBtn = document.querySelector('#handover-modal .modal-footer .btn-primary');
+  const files = handoverCtx.pendingFiles || [];
+  let photoUrls = [];
+  if(files.length > 0){
+    if(!window._storage){
+      alert('Storage not ready yet. Please wait a moment and try again.');
+      if(saveBtn){saveBtn.textContent='Save handover';saveBtn.disabled=false;}
+      return;
+    }
+    if(saveBtn){saveBtn.textContent='Uploading 0/' + files.length + '…';saveBtn.disabled=true;}
+    try {
+      photoUrls = await window._storage.uploadHandoverPhotos(handoverCtx.vid, handoverId, files, function(done, total){
+        if(saveBtn) saveBtn.textContent = 'Uploading ' + done + '/' + total + '…';
+      });
+      // Check if any fell back to local storage
+      const localCount = photoUrls.filter(u => u.endsWith('#local')).length;
+      if(localCount > 0){
+        alert(localCount + ' photo(s) could not be uploaded to cloud (Firebase Storage rules may need to be set to allow writes). They are saved locally in this session only.\n\nTo fix: In Firebase Console → Storage → Rules, allow writes to the handovers/ path.');
+      }
+    } catch(e) {
+      console.error('Photo upload failed:', e);
+      const errMsg = e && e.message ? e.message : String(e);
+      alert('Photo upload failed: ' + errMsg + '\n\nHandover saved without photos.');
+    }
+    if(saveBtn){saveBtn.textContent='Save handover';saveBtn.disabled=false;}
+    setTimeout(function(){ if(window._storage) window._storage.renderStorageMeter(); }, 1000);
+  }
   if(!v.handovers)v.handovers=[];
-  v.handovers.push({id:Date.now(),date,type,driver,odo,notes});
-  closeModal('handover-modal');refreshVehicle(handoverCtx.vid);
+  v.handovers.push({id:handoverId,date,type,driver,odo,notes,photos:photoUrls});
+  closeModal('handover-modal');
+  handoverCtx=null;
+  refreshVehicle(v.id);
 }
 
-// ── NOTE ACTIONS ──────────────────────────────────────────────
+// ── PHOTO PREVIEW (handover modal) ───────────────────────────
+function handleHovPhotoFiles(files) {
+  if (!handoverCtx) return;
+  const grid = document.getElementById('hov-preview-grid');
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    handoverCtx.pendingFiles.push(file);
+    const idx = handoverCtx.pendingFiles.length - 1;
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb-wrap';
+    wrap.id = `hov-thumb-${idx}`;
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    const btn = document.createElement('button');
+    btn.className = 'photo-thumb-remove';
+    btn.innerHTML = '✕';
+    btn.onclick = (e) => { e.stopPropagation(); removeHovPhoto(idx); };
+    wrap.appendChild(img); wrap.appendChild(btn);
+    grid.appendChild(wrap);
+  }
+}
+function removeHovPhoto(idx) {
+  if (!handoverCtx) return;
+  handoverCtx.pendingFiles.splice(idx, 1);
+  const el = document.getElementById(`hov-thumb-${idx}`);
+  if (el) el.remove();
+  // re-index remaining thumbs
+  const thumbs = document.querySelectorAll('#hov-preview-grid .photo-thumb-wrap');
+  thumbs.forEach((t, i) => {
+    t.id = `hov-thumb-${i}`;
+    t.querySelector('.photo-thumb-remove').onclick = (e) => { e.stopPropagation(); removeHovPhoto(i); };
+  });
+}
+
+// ── PHOTO LIGHTBOX ────────────────────────────────────────────
+function openLightbox(url, caption) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-caption').textContent = caption || '';
+  document.getElementById('photo-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('photo-lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
 function openNote(vid){
   noteCtx={vid};
   document.getElementById('note-modal-body').innerHTML=`
@@ -1802,6 +2055,8 @@ function addVehicle(){
   const container=document.getElementById('vehicle-pages');
   container.insertAdjacentHTML('beforeend',buildVehiclePage(v));
   renderSidebar();renderOverview();showVehicle(v.id);
+  window._db.saveVehicle(v);
+  window._db.saveMeta({nid, ndid});
 }
 
 // ── DELETE VEHICLE ────────────────────────────────────────────
@@ -1811,7 +2066,9 @@ function deleteVehicle(id){
   openModal('delete-modal');
 }
 function confirmDelete(){
-  if(!deleteId)return;vehicles=vehicles.filter(v=>v.id!==deleteId);
+  if(!deleteId)return;
+  window._db.removeVehicle(deleteId);
+  vehicles=vehicles.filter(v=>v.id!==deleteId);
   const pg=document.getElementById('vpage-'+deleteId);if(pg)pg.remove();
   deleteId=null;closeModal('delete-modal');renderSidebar();showOverview();
 }
@@ -1826,10 +2083,13 @@ function addDriver(){
   const emergName=document.getElementById('df-emerg-name').value.trim();
   const emergPhone=document.getElementById('df-emerg-phone').value.trim();
   if(!name){alert('Please enter driver name.');return;}
-  standaloneDrivers.push({id:ndid++,name,phone,nic,license,emergName,emergPhone});
+  const newDriver = {id:ndid++,name,phone,nic,license,emergName,emergPhone};
+  standaloneDrivers.push(newDriver);
   closeModal('add-driver-modal');
   ['df-name','df-phone','df-nic','df-license','df-emerg-name','df-emerg-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderDrivers();
+  window._db.saveDriver(newDriver);
+  window._db.saveMeta({nid, ndid});
 }
 
 // ── REFRESH ───────────────────────────────────────────────────
@@ -1841,6 +2101,7 @@ function refreshVehicle(id){
   const newPage=div.firstElementChild;
   if(oldPage){const wasActive=oldPage.classList.contains('active');oldPage.replaceWith(newPage);if(wasActive)newPage.classList.add('active');}
   renderSidebar();renderOverview();
+  window._db.saveVehicle(v);
 }
 
 // ── MODAL ─────────────────────────────────────────────────────
@@ -1928,6 +2189,7 @@ function saveDoc(vid, key) {
     <div style="flex:1;display:flex;align-items:center;gap:8px;">${docBadge(val)}</div>
     <button class="doc-edit-btn" onclick="editDoc(${vid},'${key}')">Edit</button>`;
   renderSidebar();
+  window._db.saveVehicle(v);
 }
 function cancelDocEdit(vid, key, oldVal) {
   const rowEl = document.getElementById(`docrow-${vid}-${key}`);
@@ -1980,7 +2242,8 @@ function deleteDriver(idx){
 function confirmDeleteDriver(){
   if(deleteDriverIdx === null) return;
   const d = getAllDrivers()[deleteDriverIdx];
-  // remove from standaloneDrivers by name+nic match
+  const toRemove = standaloneDrivers.find(sd => sd.name === d.name && (sd.nic === d.nic || !sd.nic));
+  if(toRemove) window._db.removeDriver(toRemove.id);
   standaloneDrivers = standaloneDrivers.filter(sd => !(sd.name === d.name && (sd.nic === d.nic || !sd.nic)));
   deleteDriverIdx = null;
   closeModal('delete-driver-modal');
@@ -2008,7 +2271,7 @@ function renderAll(){
   const container=document.getElementById('vehicle-pages');
   container.innerHTML=vehicles.map(v=>buildVehiclePage(v)).join('');
 }
-renderAll();
+// Firebase listeners trigger renderAll on load — no need to call it here
 </script>
 </body>
 </html>
