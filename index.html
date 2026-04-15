@@ -202,6 +202,19 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px;}
 
+/* ── VEHICLE PHOTO ── */
+.vehicle-photo-thumb{width:38px;height:38px;border-radius:9px;object-fit:cover;border:0.5px solid var(--bdr2);}
+.vehicle-photo-upload-zone{border:1.5px dashed var(--bdr2);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .15s;margin-top:4px;background:var(--bg3);}
+.vehicle-photo-upload-zone:hover,.vehicle-photo-upload-zone.drag-over{border-color:var(--teal);background:var(--teal-pale);}
+.vehicle-photo-upload-zone input{display:none;}
+.vehicle-photo-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:block;margin-top:8px;border:0.5px solid var(--bdr2);}
+.vp-photo-wrap{width:70px;height:70px;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative;cursor:pointer;}
+.vp-photo-wrap img{width:100%;height:100%;object-fit:cover;}
+.vp-photo-wrap:hover::after{content:'✏️';position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px;}
+.vp-photo-edit-btn{font-size:11px;padding:3px 9px;border-radius:6px;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--txt3);cursor:pointer;font-family:var(--font-body);transition:all .15s;margin-top:4px;display:block;text-align:center;}
+.vp-photo-edit-btn:hover{background:var(--bg4);color:var(--txt);}
+.fc-vehicle-photo{width:38px;height:38px;border-radius:9px;object-fit:cover;border:0.5px solid var(--bdr2);flex-shrink:0;}
+
 /* ── ALERTS PAGE ── */
 .alerts-list{display:flex;flex-direction:column;gap:10px;}
 .alert-item{display:flex;align-items:flex-start;gap:14px;background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);padding:16px 18px;transition:border-color .15s;}
@@ -648,6 +661,9 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <div class="mfg"><label>Emergency contact name</label><input id="f-emerg-name" placeholder="e.g. Wife / Father"/></div>
         <div class="mfg"><label>Emergency contact phone</label><input id="f-emerg-phone" placeholder="07X XXX XXXX"/></div>
       </div>
+      <div class="mfrow" style="grid-template-columns:1fr;">
+        <div class="mfg"><label>Driver address</label><input id="f-address" placeholder="e.g. No. 12, Main Street, Colombo 07"/></div>
+      </div>
       <div class="mfrow">
         <div class="mfg"><label>Security deposit (LKR)</label><input id="f-deposit" type="number" placeholder="50000"/></div>
         <div class="mfg"><label>Rental start date</label><input id="f-start" type="date"/></div>
@@ -670,7 +686,18 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <div class="mfg"><label>Service every (km)</label><input id="f-serv-km" type="number" placeholder="5000"/></div>
         <div class="mfg"><label>Service every (months)</label><input id="f-serv-mo" type="number" placeholder="3"/></div>
       </div>
-      <div class="mfg" style="margin-bottom:0;"><label>Notes</label><input id="f-notes" placeholder="Optional notes"/></div>
+      <div class="mfg" style="margin-bottom:12px;"><label>Notes</label><input id="f-notes" placeholder="Optional notes"/></div>
+      <div class="mfg" style="margin-bottom:0;">
+        <label>Vehicle photo <span style="font-weight:400;color:var(--txt3)">(optional — stored directly, no cloud storage needed)</span></label>
+        <div class="vehicle-photo-upload-zone" id="f-photo-zone" onclick="document.getElementById('f-photo-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="event.preventDefault();this.classList.remove('drag-over');handleVehiclePhotoFile(event.dataTransfer.files[0])">
+          <input type="file" id="f-photo-input" accept="image/*" onchange="handleVehiclePhotoFile(this.files[0])">
+          <div id="f-photo-label" style="font-size:13px;color:var(--txt3);">📷 Click or drag a photo here</div>
+          <img id="f-photo-preview" class="vehicle-photo-preview" src="" alt="" style="display:none;"/>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" onclick="closeModal('add-modal')">Cancel</button>
@@ -763,6 +790,39 @@ body{display:flex;flex-direction:column;min-height:100vh;}
   </div>
 </div>
 
+<!-- EDIT PAYMENT MODAL -->
+<div class="modal-overlay" id="edit-payment-modal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head"><h3>Edit payment record</h3><button type="button" class="modal-close" onclick="closeModal('edit-payment-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--txt3);margin-bottom:16px;">Customize the amount, dates, and status for this payment entry.</p>
+      <div class="mfrow">
+        <div class="mfg"><label>Month</label><input id="ep-month" readonly style="opacity:0.6;cursor:default"/></div>
+        <div class="mfg"><label>Amount (LKR)</label><input id="ep-amount" type="number" placeholder="e.g. 35000"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Due date</label><input id="ep-duedate" type="date"/></div>
+        <div class="mfg"><label>Paid on date</label><input id="ep-paiddate" type="date"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Paid amount (LKR)</label><input id="ep-paidamount" type="number" placeholder="Leave 0 if unpaid"/></div>
+        <div class="mfg"><label>Status</label>
+          <select id="ep-status" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('edit-payment-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmEditPayment()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- MARK SERVICE DONE MODAL -->
 <div class="modal-overlay" id="service-done-modal">
   <div class="modal" style="max-width:420px;">
@@ -799,6 +859,9 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <div class="mfg"><label>Emergency contact name</label><input id="df-emerg-name" placeholder="Name"/></div>
         <div class="mfg"><label>Emergency contact phone</label><input id="df-emerg-phone" placeholder="07X XXX XXXX"/></div>
       </div>
+      <div class="mfrow" style="grid-template-columns:1fr;">
+        <div class="mfg"><label>Address</label><input id="df-address" placeholder="e.g. No. 12, Main Street, Colombo 07"/></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" onclick="closeModal('add-driver-modal')">Cancel</button>
@@ -821,6 +884,34 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       </div>
     </div>
   </div>
+</div>
+
+<!-- EDIT DRIVER MODAL -->
+<div class="modal-overlay" id="edit-driver-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head"><h3>Edit driver</h3><button type="button" class="modal-close" onclick="closeModal('edit-driver-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="mfrow">
+        <div class="mfg"><label>Full name</label><input id="edf-name" placeholder="Full name"/></div>
+        <div class="mfg"><label>Phone</label><input id="edf-phone" placeholder="07X XXX XXXX"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>NIC</label><input id="edf-nic" placeholder="XXXXXXXXXV"/></div>
+        <div class="mfg"><label>License no.</label><input id="edf-license" placeholder="B1234567"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Emergency contact name</label><input id="edf-emerg-name" placeholder="Name"/></div>
+        <div class="mfg"><label>Emergency contact phone</label><input id="edf-emerg-phone" placeholder="07X XXX XXXX"/></div>
+      </div>
+      <div class="mfrow" style="grid-template-columns:1fr;">
+        <div class="mfg"><label>Address</label><input id="edf-address" placeholder="e.g. No. 12, Main Street, Colombo 07"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('edit-driver-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmEditDriver()">Save changes</button>
+    </div>
+  </div>
 </div><!-- end .layout -->
 
 <!-- PHOTO LIGHTBOX -->
@@ -828,6 +919,22 @@ body{display:flex;flex-direction:column;min-height:100vh;}
   <button type="button" class="photo-lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="Handover photo"/>
   <div class="photo-lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- VEHICLE PHOTO EDIT INPUT (hidden, reused for all vehicles) -->
+<input type="file" id="vehicle-photo-edit-input" accept="image/*" style="display:none" onchange="handleVehiclePhotoEdit(this.files[0])"/>
+<div class="modal-overlay" id="vehicle-photo-modal" style="z-index:1100;">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head"><h3>Vehicle photo</h3><button type="button" class="modal-close" onclick="closeModal('vehicle-photo-modal')">✕</button></div>
+    <div class="modal-body" id="vehicle-photo-modal-body" style="text-align:center;"></div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button type="button" class="btn btn-danger btn-sm" id="vehicle-photo-remove-btn" onclick="removeVehiclePhoto()" style="display:none">Remove photo</button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('vehicle-photo-modal')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('vehicle-photo-edit-input').click()">📷 Upload photo</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase SDK -->
@@ -1140,7 +1247,7 @@ function renderOverview(){
     return `<div class="fleet-card status-${st}" onclick="showVehicle(${v.id})">
       <div class="fc-top">
         <div class="fc-vehicle">
-          <div class="type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>
+          ${v.photo ? `<img class="fc-vehicle-photo" src="${v.photo}" alt="${v.name}" onclick="event.stopPropagation();openVehiclePhotoLightbox('${v.id}')"/>` : `<div class="type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>`}
           <div><div class="fc-name">${v.name}</div><div class="fc-plate">${v.plate}</div></div>
         </div>
         <span class="status-pill ${pillCls}" style="${pillStyle}">${pillTxt}</span>
@@ -1249,7 +1356,7 @@ function getAllDrivers(){
   const map={};
   vehicles.forEach(v=>{
     if(!map[v.nic||v.driver]){
-      map[v.nic||v.driver]={name:v.driver,phone:v.phone,nic:v.nic,license:v.license,emergName:v.emergName,emergPhone:v.emergPhone,vehicles:[]};
+      map[v.nic||v.driver]={name:v.driver,phone:v.phone,nic:v.nic,license:v.license,address:v.address,emergName:v.emergName,emergPhone:v.emergPhone,vehicles:[]};
     }
     map[v.nic||v.driver].vehicles.push(v);
   });
@@ -1275,7 +1382,10 @@ function renderDrivers(){
           <h3>${d.name}</h3>
           <p>${d.phone||'—'}</p>
         </div>
-        <button type="button" class="del-driver-btn" onclick="event.stopPropagation();deleteDriver(${i})" title="Remove driver">✕ Remove</button>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:auto;">
+          <button type="button" class="del-driver-btn" style="background:var(--blue-pale);border-color:rgba(55,138,221,.3);color:var(--blue);" onclick="event.stopPropagation();openEditDriverModal(${i})" title="Edit driver">✏ Edit</button>
+          <button type="button" class="del-driver-btn" onclick="event.stopPropagation();deleteDriver(${i})" title="Remove driver">✕ Remove</button>
+        </div>
       </div>
       <div class="driver-stats">
         <div class="ds-item"><strong>${d.vehicles.length}</strong>Vehicles</div>
@@ -1285,6 +1395,7 @@ function renderDrivers(){
       <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--bdr);font-size:12px;color:var(--txt3);">
         NIC: <span style="font-family:var(--font-mono);color:var(--txt2)">${d.nic||'—'}</span> &nbsp;·&nbsp; License: <span style="font-family:var(--font-mono);color:var(--txt2)">${d.license||'—'}</span>
       </div>
+      ${d.address?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">📍 Address: <span style="color:var(--txt2)">${d.address}</span></div>`:''}
       ${d.emergName?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">Emergency: <span style="color:var(--txt2)">${d.emergName} · ${d.emergPhone}</span></div>`:''}
     </div>`;
   }).join('');
@@ -1301,6 +1412,7 @@ function showDriverDetail(idx){
         <tr><td>Phone</td><td>${d.phone||'—'}</td></tr>
         <tr><td>NIC</td><td style="font-family:var(--font-mono)">${d.nic||'—'}</td></tr>
         <tr><td>License</td><td style="font-family:var(--font-mono)">${d.license||'—'}</td></tr>
+        <tr><td>Address</td><td>${d.address||'—'}</td></tr>
         <tr><td>Emergency</td><td>${d.emergName||'—'}</td></tr>
         <tr><td>Emergency phone</td><td>${d.emergPhone||'—'}</td></tr>
       </table>
@@ -1454,7 +1566,9 @@ function buildVehiclePage(v){
       </td>
       <td style="display:flex;gap:4px;flex-wrap:wrap;">
         ${p.paid!=='paid'?`<button type="button" class="mark-paid-btn" onclick="quickMarkPaid(${v.id},'${p.month}')">Full</button>
-        <button type="button" class="mark-paid-btn" style="background:var(--blue-pale);border-color:rgba(55,138,221,.3);color:var(--blue)" onclick="openPartial(${v.id},'${p.month}')">Partial</button>`:'—'}
+        <button type="button" class="mark-paid-btn" style="background:var(--blue-pale);border-color:rgba(55,138,221,.3);color:var(--blue)" onclick="openPartial(${v.id},'${p.month}')">Partial</button>`:''}
+        <button type="button" class="mark-paid-btn" style="background:var(--purple-pale);border-color:rgba(139,111,212,.3);color:var(--purple)" onclick="openEditPayment(${v.id},'${p.month}')">Edit</button>
+        <button type="button" class="mark-paid-btn" style="background:var(--red-pale);border-color:rgba(226,75,74,.3);color:var(--red)" onclick="deletePaymentRecord(${v.id},'${p.month}')">Delete</button>
       </td>
     </tr>`;
   }).join('');
@@ -1544,15 +1658,25 @@ function buildVehiclePage(v){
 
   // odometer
   const odoLog = (v.odometerLog||[]).slice().sort((a,b)=>a.id-b.id);
-  const currentOdo = odoLog.length ? odoLog[odoLog.length-1].reading : (v.lastServOdometer||null);
-  const firstOdo = odoLog.length ? odoLog[0].reading : null;
+  const parseOdoDateFn = s => { if(!s) return 0; const m = s.match(/(\d+)\s+(\w+)\s+(\d+)/); if(!m) return 0; return new Date(`${m[2]} ${m[1]}, ${m[3]}`).getTime()||0; };
+  const odoByDate = odoLog.slice().sort((a,b)=>parseOdoDateFn(a.date)-parseOdoDateFn(b.date));
+  const currentOdo = odoByDate.length ? odoByDate[odoByDate.length-1].reading : (v.lastServOdometer||null);
+  const firstOdo = odoByDate.length ? odoByDate[0].reading : null;
   const totalDriven = (currentOdo&&firstOdo) ? currentOdo - firstOdo : null;
   const nextServOdo = v.lastServOdometer&&v.servKm ? v.lastServOdometer+v.servKm : null;
   const kmToServ = (nextServOdo&&currentOdo) ? nextServOdo - currentOdo : null;
   const servPct = (nextServOdo&&v.lastServOdometer&&v.servKm) ? Math.min(100,Math.round(((currentOdo||v.lastServOdometer)-v.lastServOdometer)/v.servKm*100)) : 0;
   const servColor = servPct>=90?'var(--red)':servPct>=70?'var(--amber)':'var(--teal)';
-  const odoLogRows = odoLog.slice().reverse().map((entry,i,arr)=>{
-    const prev = arr[i+1];
+  // Sort by date for display (newest first), but compute delta against chronological order
+  const parseOdoDate = s => { if(!s) return 0; const m = s.match(/(\d+)\s+(\w+)\s+(\d+)/); if(!m) return 0; return new Date(`${m[2]} ${m[1]}, ${m[3]}`).getTime()||0; };
+  // Chronological order for delta computation
+  const odoChronological = odoLog.slice().sort((a,b)=>parseOdoDate(a.date)-parseOdoDate(b.date));
+  // Display sorted newest first
+  const odoSorted = odoLog.slice().sort((a,b)=>parseOdoDate(b.date)-parseOdoDate(a.date));
+  const odoLogRows = odoSorted.map((entry)=>{
+    // Find previous reading in chronological order
+    const chronoIdx = odoChronological.findIndex(e => e.id === entry.id);
+    const prev = chronoIdx > 0 ? odoChronological[chronoIdx - 1] : null;
     const delta = prev ? entry.reading - prev.reading : null;
     const deltaClass = delta>5000?'high':'';
     return `<tr>
@@ -1560,6 +1684,7 @@ function buildVehiclePage(v){
       <td style="font-family:var(--font-mono);font-weight:500">${entry.reading.toLocaleString()} km</td>
       <td>${delta!==null?`<span class="odo-delta ${deltaClass}">+${delta.toLocaleString()} km</span>`:'<span class="odo-delta none">—</span>'}</td>
       <td style="color:var(--txt3);font-size:12px">${entry.note||'—'}</td>
+      <td><button type="button" onclick="deleteOdoEntry(${v.id},${entry.id})" style="font-size:11px;padding:3px 9px;border-radius:6px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.3);color:var(--red);cursor:pointer;font-family:var(--font-body);line-height:1.4;" title="Delete this reading">✕</button></td>
     </tr>`;
   }).join('');
 
@@ -1567,7 +1692,14 @@ function buildVehiclePage(v){
     <div class="vp-header">
       <div class="vp-top">
         <div class="vp-left">
-          <div class="vp-type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>
+          ${v.photo
+            ? `<div class="vp-photo-wrap" onclick="openVehiclePhotoLightbox('${v.id}')">
+                <img src="${v.photo}" alt="${v.name}"/>
+               </div>
+               <label class="vp-photo-edit-btn" onclick="triggerVehiclePhotoEdit(${v.id})">📷 Change photo</label>`
+            : `<div class="vp-type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>
+               <label class="vp-photo-edit-btn" onclick="triggerVehiclePhotoEdit(${v.id})">📷 Add photo</label>`
+          }
           <div>
             <div style="display:flex;align-items:center;gap:10px;">
               <div class="vp-title">${v.name}</div>
@@ -1640,6 +1772,7 @@ function buildVehiclePage(v){
             <table class="info-table">
               <tr><td>NIC</td><td style="font-family:var(--font-mono)">${v.nic||'—'}</td></tr>
               <tr><td>License no.</td><td style="font-family:var(--font-mono)">${v.license||'—'}</td></tr>
+              <tr><td>Address</td><td>${v.address||'—'}</td></tr>
               <tr><td>Emergency</td><td>${v.emergName||'—'} (${v.emergPhone||'—'})</td></tr>
               <tr><td>Since</td><td>${new Date(v.startDate).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td></tr>
             </table>
@@ -1757,8 +1890,8 @@ function buildVehiclePage(v){
         </div>
         <div class="odo-log-section">
           <table class="odo-log-table">
-            <thead><tr><th>Date</th><th>Reading</th><th>Distance</th><th>Note</th></tr></thead>
-            <tbody>${odoLogRows||`<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:20px">No odometer readings logged yet.</td></tr>`}</tbody>
+            <thead><tr><th>Date</th><th>Reading</th><th>Distance</th><th>Note</th><th></th></tr></thead>
+            <tbody>${odoLogRows||`<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">No odometer readings logged yet.</td></tr>`}</tbody>
           </table>
         </div>
       </div>
@@ -2059,7 +2192,7 @@ function selFee(t,btn){
 function openAddModal(){
   document.getElementById('f-start').value=todayStr;
   document.getElementById('f-dueday').value='5';
-  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
+  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-address','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('f-type').value='Car';feeTypeSel='monthly';
@@ -2068,6 +2201,11 @@ function openAddModal(){
   const personalCb=document.getElementById('f-personal');if(personalCb)personalCb.checked=false;
   const driverSection=document.getElementById('f-driver-section');if(driverSection)driverSection.style.display='';
   const feeSection=document.getElementById('f-fee-section');if(feeSection)feeSection.style.display='';
+  // Reset vehicle photo
+  vehiclePhotoPending = null;
+  const photoPreview=document.getElementById('f-photo-preview');if(photoPreview){photoPreview.style.display='none';photoPreview.src='';}
+  const photoLabel=document.getElementById('f-photo-label');if(photoLabel)photoLabel.textContent='📷 Click or drag a photo here';
+  const photoInput=document.getElementById('f-photo-input');if(photoInput)photoInput.value='';
   // Populate existing drivers dropdown
   const driverSel=document.getElementById('f-existing-driver');
   if(driverSel){
@@ -2090,6 +2228,7 @@ function addVehicle(){
   const license=document.getElementById('f-license').value.trim();
   const emergName=document.getElementById('f-emerg-name').value.trim();
   const emergPhone=document.getElementById('f-emerg-phone').value.trim();
+  const address=document.getElementById('f-address').value.trim();
   const depositAmt=parseInt(document.getElementById('f-deposit').value)||0;
   const startDate=document.getElementById('f-start').value;
   const notes=document.getElementById('f-notes').value.trim();
@@ -2106,12 +2245,13 @@ function addVehicle(){
   if(!name||!plate||!startDate){alert('Please fill in name, plate, and start date.');return;}
   if(!isPersonal&&(!rent||!driver)){alert('Please fill in all required fields.');return;}
   const startOdoLog=initOdo?[{id:Date.now(),date:new Date(startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),reading:initOdo,note:'Initial reading'}]:[];
-  const v={id:nid++,name,plate,type,year,feeType:feeTypeSel,rent:rent||0,driver:driver||'(Personal)',phone,nic,license,emergName,emergPhone,startDate,dueDay,notes,personal:isPersonal,
+  const v={id:nid++,name,plate,type,year,feeType:feeTypeSel,rent:rent||0,driver:driver||'(Personal)',phone,nic,license,emergName,emergPhone,address,startDate,dueDay,notes,personal:isPersonal,
     deposit:{amount:depositAmt,status:'held',date:today.toLocaleDateString('en-GB')},
     docs:{revLicense:docRL,insurance:docIns,emission:docEmi,fitness:docFit,roadPermit:docRP,vat:docVAT},
     servKm,servMonths,lastServDate:null,lastServOdometer:initOdo||null,
     odometerLog:startOdoLog,
     expenses:[],handovers:[],noteEntries:[],payments:[]};
+  if(vehiclePhotoPending) v.photo = vehiclePhotoPending;
   v.payments=genPayments(v);vehicles.push(v);
   closeModal('add-modal');
   const container=document.getElementById('vehicle-pages');
@@ -2140,6 +2280,7 @@ function fillDriverFromSelect(idx){
   document.getElementById('f-license').value=d.license||'';
   document.getElementById('f-emerg-name').value=d.emergName||'';
   document.getElementById('f-emerg-phone').value=d.emergPhone||'';
+  document.getElementById('f-address').value=d.address||'';
 }
 
 // ── DELETE VEHICLE ────────────────────────────────────────────
@@ -2165,17 +2306,64 @@ function addDriver(){
   const license=document.getElementById('df-license').value.trim();
   const emergName=document.getElementById('df-emerg-name').value.trim();
   const emergPhone=document.getElementById('df-emerg-phone').value.trim();
+  const address=document.getElementById('df-address').value.trim();
   if(!name){alert('Please enter driver name.');return;}
-  const newDriver = {id:ndid++,name,phone,nic,license,emergName,emergPhone};
+  const newDriver = {id:ndid++,name,phone,nic,license,emergName,emergPhone,address};
   standaloneDrivers.push(newDriver);
   closeModal('add-driver-modal');
-  ['df-name','df-phone','df-nic','df-license','df-emerg-name','df-emerg-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['df-name','df-phone','df-nic','df-license','df-emerg-name','df-emerg-phone','df-address'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderDrivers();
   window._db.saveDriver(newDriver);
   window._db.saveMeta({nid, ndid});
 }
 
-// ── REFRESH ───────────────────────────────────────────────────
+// ── EDIT DRIVER ───────────────────────────────────────────────
+let editDriverIdx = null;
+function openEditDriverModal(idx) {
+  const d = getAllDrivers()[idx];
+  editDriverIdx = idx;
+  document.getElementById('edf-name').value = d.name || '';
+  document.getElementById('edf-phone').value = d.phone || '';
+  document.getElementById('edf-nic').value = d.nic || '';
+  document.getElementById('edf-license').value = d.license || '';
+  document.getElementById('edf-emerg-name').value = d.emergName || '';
+  document.getElementById('edf-emerg-phone').value = d.emergPhone || '';
+  document.getElementById('edf-address').value = d.address || '';
+  openModal('edit-driver-modal');
+}
+function confirmEditDriver() {
+  if (editDriverIdx === null) return;
+  const d = getAllDrivers()[editDriverIdx];
+  const name = document.getElementById('edf-name').value.trim();
+  const phone = document.getElementById('edf-phone').value.trim();
+  const nic = document.getElementById('edf-nic').value.trim();
+  const license = document.getElementById('edf-license').value.trim();
+  const emergName = document.getElementById('edf-emerg-name').value.trim();
+  const emergPhone = document.getElementById('edf-emerg-phone').value.trim();
+  const address = document.getElementById('edf-address').value.trim();
+  if (!name) { alert('Please enter driver name.'); return; }
+  // Update standalone driver record if exists
+  const sd = standaloneDrivers.find(x => x.name === d.name && (x.nic === d.nic || !x.nic));
+  if (sd) {
+    sd.name = name; sd.phone = phone; sd.nic = nic; sd.license = license;
+    sd.emergName = emergName; sd.emergPhone = emergPhone; sd.address = address;
+    window._db.saveDriver(sd);
+  }
+  // Update all linked vehicles
+  vehicles.forEach(v => {
+    if ((v.nic && v.nic === d.nic) || (!v.nic && v.driver === d.name)) {
+      v.driver = name; v.phone = phone; v.nic = nic; v.license = license;
+      v.emergName = emergName; v.emergPhone = emergPhone; v.address = address;
+      window._db.saveVehicle(v);
+    }
+  });
+  closeModal('edit-driver-modal');
+  editDriverIdx = null;
+  renderDrivers();
+  renderAll();
+}
+
+
 function refreshVehicle(id){
   const v=vehicles.find(x=>x.id===id);
   const oldPage=document.getElementById('vpage-'+id);
@@ -2282,6 +2470,12 @@ function cancelDocEdit(vid, key, oldVal) {
 }
 
 // ── ODOMETER ACTIONS ─────────────────────────────────────────
+function deleteOdoEntry(vid, entryId) {
+  if (!confirm('Delete this odometer reading?')) return;
+  const v = vehicles.find(x => x.id === vid);
+  v.odometerLog = (v.odometerLog||[]).filter(e => e.id !== entryId);
+  refreshVehicle(vid);
+}
 let odoCtx = null;
 function openOdo(vid){
   odoCtx = {vid};
@@ -2311,6 +2505,61 @@ function confirmOdo(){
   refreshVehicle(odoCtx.vid);
 }
 
+
+// ── EDIT PAYMENT ─────────────────────────────────────────────
+let editPaymentCtx = null;
+function openEditPayment(vid, month) {
+  const v = vehicles.find(x => x.id === vid);
+  const p = v.payments.find(x => x.month === month);
+  if (!p) return;
+  editPaymentCtx = {vid, month};
+  document.getElementById('ep-month').value = month;
+  document.getElementById('ep-amount').value = p.amount || '';
+  // convert dd/mm/yyyy -> yyyy-mm-dd for date input
+  function toInputDate(str) {
+    if (!str) return '';
+    const parts = str.split('/');
+    if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    return '';
+  }
+  document.getElementById('ep-duedate').value = toInputDate(p.dueDate);
+  document.getElementById('ep-paiddate').value = toInputDate(p.paidDate);
+  document.getElementById('ep-paidamount').value = p.paidAmount || '';
+  document.getElementById('ep-status').value = p.paid || 'pending';
+  openModal('edit-payment-modal');
+}
+function confirmEditPayment() {
+  if (!editPaymentCtx) return;
+  const v = vehicles.find(x => x.id === editPaymentCtx.vid);
+  const p = v.payments.find(x => x.month === editPaymentCtx.month);
+  if (!p) return;
+  const amt = parseInt(document.getElementById('ep-amount').value) || p.amount;
+  const dueDateRaw = document.getElementById('ep-duedate').value;
+  const paidDateRaw = document.getElementById('ep-paiddate').value;
+  const paidAmt = parseInt(document.getElementById('ep-paidamount').value) || 0;
+  const status = document.getElementById('ep-status').value;
+  function toDisplayDate(str) {
+    if (!str) return null;
+    return new Date(str).toLocaleDateString('en-GB');
+  }
+  p.amount = amt;
+  if (dueDateRaw) p.dueDate = toDisplayDate(dueDateRaw);
+  if (paidDateRaw) p.paidDate = toDisplayDate(paidDateRaw);
+  p.paidAmount = paidAmt;
+  p.paid = status;
+  closeModal('edit-payment-modal');
+  editPaymentCtx = null;
+  refreshVehicle(v.id);
+}
+
+function deletePaymentRecord(vid, month) {
+  if (!confirm(`Delete the payment record for "${month}"? This cannot be undone.`)) return;
+  const v = vehicles.find(x => x.id === vid);
+  v.payments = v.payments.filter(p => p.month !== month);
+  refreshVehicle(vid);
+  renderOverview();
+  renderSidebar();
+}
 
 // ── SERVICE DONE / ODOMETER RESET ────────────────────────────
 let serviceDoneCtx = null;
@@ -2383,6 +2632,105 @@ function toggleTheme(){
   }
 })();
 
+
+// ── VEHICLE PHOTO (base64, no Firebase Storage needed) ────────
+let vehiclePhotoEditId = null;
+let vehiclePhotoPending = null; // base64 string waiting to be saved with addVehicle
+
+function compressVehicleImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const maxW = 800;
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          const reader2 = new FileReader();
+          reader2.onload = () => resolve(reader2.result); // base64 data URL
+          reader2.readAsDataURL(blob);
+        }, 'image/jpeg', 0.75);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Called when adding a new vehicle
+async function handleVehiclePhotoFile(file) {
+  if (!file) return;
+  const label = document.getElementById('f-photo-label');
+  const preview = document.getElementById('f-photo-preview');
+  label.textContent = '⏳ Compressing…';
+  try {
+    vehiclePhotoPending = await compressVehicleImage(file);
+    preview.src = vehiclePhotoPending;
+    preview.style.display = 'block';
+    label.textContent = '✅ Photo ready — will be saved with vehicle';
+  } catch(e) {
+    label.textContent = '❌ Failed to load image. Try another file.';
+    vehiclePhotoPending = null;
+  }
+}
+
+// Called from vehicle page header — opens the photo modal for an existing vehicle
+function triggerVehiclePhotoEdit(vid) {
+  vehiclePhotoEditId = vid;
+  const v = vehicles.find(x => x.id === vid);
+  const body = document.getElementById('vehicle-photo-modal-body');
+  const removeBtn = document.getElementById('vehicle-photo-remove-btn');
+  if (v.photo) {
+    body.innerHTML = `<img src="${v.photo}" alt="${v.name}" style="max-width:100%;max-height:260px;border-radius:10px;border:0.5px solid var(--bdr2);margin-bottom:12px;"/><div style="font-size:12px;color:var(--txt3);">Current photo for ${v.name}</div>`;
+    removeBtn.style.display = '';
+  } else {
+    body.innerHTML = `<div style="font-size:40px;margin-bottom:12px;">${typeEmoji[v.type]||'🚗'}</div><div style="font-size:13px;color:var(--txt3);">No photo yet for <strong>${v.name}</strong>.<br>Upload one to replace the icon.</div>`;
+    removeBtn.style.display = 'none';
+  }
+  // Reset the file input so same file can be re-selected
+  document.getElementById('vehicle-photo-edit-input').value = '';
+  openModal('vehicle-photo-modal');
+}
+
+async function handleVehiclePhotoEdit(file) {
+  if (!file || vehiclePhotoEditId === null) return;
+  closeModal('vehicle-photo-modal');
+  const v = vehicles.find(x => x.id === vehiclePhotoEditId);
+  const body = document.getElementById('vehicle-photo-modal-body');
+  try {
+    const dataUrl = await compressVehicleImage(file);
+    v.photo = dataUrl;
+    refreshVehicle(vehiclePhotoEditId);
+  } catch(e) {
+    alert('Failed to process image. Try another file.');
+  }
+  vehiclePhotoEditId = null;
+}
+
+function removeVehiclePhoto() {
+  if (vehiclePhotoEditId === null) return;
+  const v = vehicles.find(x => x.id === vehiclePhotoEditId);
+  delete v.photo;
+  closeModal('vehicle-photo-modal');
+  refreshVehicle(vehiclePhotoEditId);
+  vehiclePhotoEditId = null;
+}
+
+// Open vehicle photo in lightbox
+function openVehiclePhotoLightbox(vid) {
+  const v = vehicles.find(x => x.id === Number(vid));
+  if (!v || !v.photo) return;
+  document.getElementById('lightbox-img').src = v.photo;
+  document.getElementById('lightbox-caption').textContent = v.name + ' · ' + v.plate;
+  document.getElementById('photo-lightbox').classList.add('open');
+}
 
 function renderAll(){
   renderSidebar();renderOverview();
