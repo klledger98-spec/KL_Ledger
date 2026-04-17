@@ -637,7 +637,25 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       </div>
       <div class="mfrow">
         <div class="mfg"><label id="fee-lbl">Monthly rent (LKR)</label><input id="f-rent" type="number" placeholder="35000"/></div>
-        <div class="mfg"><label>Due day of month</label><input id="f-dueday" type="number" min="1" max="28" placeholder="5"/></div>
+        <div class="mfg"><label>Due day of month</label><input id="f-dueday" type="number" min="1" max="28" placeholder="5" oninput="updateDueMonthOptions()"/></div>
+      </div>
+      <!-- First payment: due month + actual payment date -->
+      <div style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:10px;padding:14px 14px 10px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--teal-glow);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:600;">📅 First Payment Setup</div>
+        <div class="mfrow">
+          <div class="mfg">
+            <label>Due month <span style="font-weight:400;color:var(--txt3)">(which month is being paid?)</span></label>
+            <select id="f-due-month" style="background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+              <option value="">— Select after filling start date —</option>
+            </select>
+          </div>
+          <div class="mfg">
+            <label>Actual payment date <span style="font-weight:400;color:var(--txt3)">(date driver actually paid)</span></label>
+            <input id="f-payment-date" type="date"/>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:2px;">
+        </div>
       </div>
       </div><!-- end f-fee-section -->
       <div id="f-driver-section">
@@ -666,7 +684,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       </div>
       <div class="mfrow">
         <div class="mfg"><label>Security deposit (LKR)</label><input id="f-deposit" type="number" placeholder="50000"/></div>
-        <div class="mfg"><label>Rental start date</label><input id="f-start" type="date"/></div>
+        <div class="mfg"><label>Rental start date</label><input id="f-start" type="date" oninput="updateDueMonthOptions()"/></div>
       </div>
       </div><!-- end f-driver-section -->
       <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;">Document expiry dates</div>
@@ -1174,15 +1192,23 @@ function calcFine(p, v){
 }
 
 // ── GENERATE PAYMENTS ─────────────────────────────────────────
-function genPayments(v){
+function genPayments(v, firstDueMonth, firstPaymentDate){
   const ps=[];const s=new Date(v.startDate);const now=new Date();
   let d=new Date(s.getFullYear(),s.getMonth(),1);
   while(d<=now){
     const lbl=monthLabel(d);const isPast=d<new Date(now.getFullYear(),now.getMonth(),1);
+    const dueDate=new Date(d.getFullYear(),d.getMonth(),v.dueDay).toLocaleDateString('en-GB');
+    // If a specific firstDueMonth is given and this row matches it, use the actual payment date
+    const isFirstDueMonthRow = firstDueMonth && lbl === firstDueMonth;
+    const paidDateStr = isFirstDueMonthRow && firstPaymentDate
+      ? new Date(firstPaymentDate).toLocaleDateString('en-GB')
+      : isPast ? new Date(d.getFullYear(),d.getMonth(),Math.max(1,v.dueDay-2)).toLocaleDateString('en-GB') : null;
     ps.push({month:lbl,amount:v.rent,paid:isPast?'paid':'pending',
       paidAmount:isPast?v.rent:0,
-      paidDate:isPast?new Date(d.getFullYear(),d.getMonth(),Math.max(1,v.dueDay-2)).toLocaleDateString('en-GB'):null,
-      dueDate:new Date(d.getFullYear(),d.getMonth(),v.dueDay).toLocaleDateString('en-GB')
+      paidDate: paidDateStr,
+      dueDate: dueDate,
+      // Store the actual payment date separately for clarity in history
+      actualPaymentDate: isFirstDueMonthRow && firstPaymentDate ? new Date(firstPaymentDate).toLocaleDateString('en-GB') : null
     });
     d.setMonth(d.getMonth()+1);
   }
@@ -1555,12 +1581,16 @@ function buildVehiclePage(v){
   const histRows=v.payments.slice().reverse().map(p=>{
     const fine=calcFine(p,v);
     const paidPct=p.amount>0?Math.min(100,Math.round((p.paidAmount||0)/p.amount*100)):0;
+    // Show actual payment date badge if it was recorded on a different date
+    const paidDateDisplay = p.actualPaymentDate && p.actualPaymentDate !== p.paidDate
+      ? `${p.paidDate||'—'} <span title="Actual payment date" style="font-size:10px;background:var(--blue-pale);color:var(--blue);border-radius:4px;padding:1px 5px;margin-left:3px;">paid ${p.actualPaymentDate}</span>`
+      : (p.actualPaymentDate ? `${p.actualPaymentDate} <span title="Actual payment date" style="font-size:10px;background:var(--blue-pale);color:var(--blue);border-radius:4px;padding:1px 5px;margin-left:3px;">actual</span>` : p.paidDate||'—');
     return `<tr>
       <td>${p.month}</td>
       <td style="font-family:var(--font-mono)">${fmt(p.amount)}${fine>0?`<div class="fine-badge" style="margin-top:2px">+${fmt(fine)} fine</div>`:''}</td>
       <td>${p.paidAmount>0?fmt(p.paidAmount):'—'}</td>
       <td>${p.dueDate||'—'}</td>
-      <td>${p.paidDate||'—'}</td>
+      <td>${paidDateDisplay}</td>
       <td><span class="hist-status hs-${p.paid}">${p.paid==='partial'?`Partial (${paidPct}%)`:p.paid.charAt(0).toUpperCase()+p.paid.slice(1)}</span>
         ${p.paid==='partial'?`<div class="partial-bar" style="width:80px"><div class="partial-fill" style="width:${paidPct}%"></div></div>`:''}
       </td>
@@ -2189,12 +2219,33 @@ function selFee(t,btn){
   btn.classList.add('active');
   document.getElementById('fee-lbl').textContent=t==='daily'?'Rate per day (LKR)':t==='custom'?'Custom fee amount (LKR)':'Monthly rent (LKR)';
 }
+// Build the "Due Month" dropdown options relative to the start date
+function updateDueMonthOptions(){
+  const startEl=document.getElementById('f-start');
+  const sel=document.getElementById('f-due-month');
+  if(!sel)return;
+  const startVal=startEl?startEl.value:'';
+  // Generate a range: 3 months before today up to 2 months ahead
+  const opts=[];
+  const ref=startVal?new Date(startVal):new Date();
+  for(let i=-3;i<=3;i++){
+    const d=new Date(ref.getFullYear(),ref.getMonth()+i,1);
+    const lbl=d.toLocaleString('default',{month:'short',year:'numeric'});
+    opts.push(`<option value="${lbl}">${lbl}</option>`);
+  }
+  const curLbl=new Date().toLocaleString('default',{month:'short',year:'numeric'});
+  sel.innerHTML=opts.join('');
+  // Default to current month
+  [...sel.options].forEach(o=>{if(o.value===curLbl)o.selected=true;});
+}
 function openAddModal(){
   document.getElementById('f-start').value=todayStr;
   document.getElementById('f-dueday').value='5';
+  document.getElementById('f-payment-date').value=todayStr;
   ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-address','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
+  updateDueMonthOptions(); // populate due month dropdown
   document.getElementById('f-type').value='Car';feeTypeSel='monthly';
   document.querySelectorAll('.fee-type-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.getElementById('fee-lbl').textContent='Monthly rent (LKR)';
@@ -2222,6 +2273,8 @@ function addVehicle(){
   const year=parseInt(document.getElementById('f-year').value)||2020;
   const rent=parseInt(document.getElementById('f-rent').value);
   const dueDay=parseInt(document.getElementById('f-dueday').value)||5;
+  const firstDueMonth=document.getElementById('f-due-month')?.value||'';
+  const firstPaymentDate=document.getElementById('f-payment-date')?.value||'';
   const driver=document.getElementById('f-driver').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   const nic=document.getElementById('f-nic').value.trim();
@@ -2252,7 +2305,7 @@ function addVehicle(){
     odometerLog:startOdoLog,
     expenses:[],handovers:[],noteEntries:[],payments:[]};
   if(vehiclePhotoPending) v.photo = vehiclePhotoPending;
-  v.payments=genPayments(v);vehicles.push(v);
+  v.payments=genPayments(v,firstDueMonth,firstPaymentDate);vehicles.push(v);
   closeModal('add-modal');
   const container=document.getElementById('vehicle-pages');
   container.insertAdjacentHTML('beforeend',buildVehiclePage(v));
