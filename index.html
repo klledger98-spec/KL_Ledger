@@ -81,8 +81,11 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .kpi-sub{font-size:12px;color:var(--txt3);margin-top:5px;}
 .section-title{font-family:var(--font-head);font-size:15px;font-weight:600;color:var(--txt);margin-bottom:14px;}
 .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px;}
-.fleet-card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:border-color .15s;}
+.fleet-card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden;}
 .fleet-card:hover{border-color:var(--bdr3);}
+.fc-watermark{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0.08;filter:blur(2px) saturate(0.6);transform:scale(1.08);pointer-events:none;border-radius:var(--radius-lg);transition:opacity .2s;}
+.fleet-card:hover .fc-watermark{opacity:0.13;}
+.fc-content{position:relative;z-index:1;}
 .fleet-card.status-overdue{border-color:rgba(226,75,74,0.35);}
 .fleet-card.status-due{border-color:rgba(239,159,39,0.3);}
 .fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
@@ -756,7 +759,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 
 <!-- ADD EXPENSE MODAL -->
 <div class="modal-overlay" id="expense-modal">
-  <div class="modal" style="max-width:420px;">
+  <div class="modal" style="max-width:460px;">
     <div class="modal-head"><h3>Add expense</h3><button type="button" class="modal-close" onclick="closeModal('expense-modal')">✕</button></div>
     <div class="modal-body" id="expense-modal-body"></div>
     <div class="modal-footer">
@@ -837,6 +840,40 @@ body{display:flex;flex-direction:column;min-height:100vh;}
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" onclick="closeModal('edit-payment-modal')">Cancel</button>
       <button type="button" class="btn btn-primary" onclick="confirmEditPayment()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANUAL PAYMENT MODAL -->
+<div class="modal-overlay" id="manual-payment-modal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head"><h3>Add manual payment</h3><button type="button" class="modal-close" onclick="closeModal('manual-payment-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--txt3);margin-bottom:16px;">Manually record a payment for any month — useful for recording past payments or custom arrangements.</p>
+      <div class="mfrow">
+        <div class="mfg"><label>Month label</label><input id="mp-month" placeholder="e.g. Jan 2025" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+        <div class="mfg"><label>Amount (LKR)</label><input id="mp-amount" type="number" placeholder="e.g. 35000" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Due date</label><input id="mp-duedate" type="date" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+        <div class="mfg"><label>Paid on date</label><input id="mp-paiddate" type="date" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Paid amount (LKR)</label><input id="mp-paidamount" type="number" placeholder="Leave 0 if unpaid" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+        <div class="mfg"><label>Status</label>
+          <select id="mp-status" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+      </div>
+      <div class="mfg"><label>Note (optional)</label><input id="mp-note" placeholder="e.g. Advance payment, cash received..." style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('manual-payment-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmManualPayment()">Add payment</button>
     </div>
   </div>
 </div>
@@ -1157,6 +1194,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script>
 // ── UTILITY ───────────────────────────────────────────────────
+// Escape user-supplied text before injecting into HTML template literals
+function h(str){
+  if(str===null||str===undefined)return'';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/`/g,'&#96;');
+}
 const fmt = n => 'LKR ' + Math.round(n).toLocaleString();
 const fmtK = n => n >= 1000 ? 'LKR ' + (n/1000).toFixed(0) + 'k' : fmt(n);
 const initials = n => n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
@@ -1271,10 +1313,12 @@ function renderOverview(){
     const dueStr=st==='overdue'?`${Math.abs(diff)}d overdue`:`${diff}d left`;
     const fine=(!v.personal&&cp)?calcFine(cp,v):0;
     return `<div class="fleet-card status-${st}" onclick="showVehicle(${v.id})">
+      ${v.photo ? `<div class="fc-watermark" style="background-image:url('${v.photo}')"></div>` : ''}
+      <div class="fc-content">
       <div class="fc-top">
         <div class="fc-vehicle">
           ${v.photo ? `<img class="fc-vehicle-photo" src="${v.photo}" alt="${v.name}" onclick="event.stopPropagation();openVehiclePhotoLightbox('${v.id}')"/>` : `<div class="type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>`}
-          <div><div class="fc-name">${v.name}</div><div class="fc-plate">${v.plate}</div></div>
+          <div><div class="fc-name">${h(v.name)}</div><div class="fc-plate">${h(v.plate)}</div></div>
         </div>
         <span class="status-pill ${pillCls}" style="${pillStyle}">${pillTxt}</span>
       </div>
@@ -1289,8 +1333,9 @@ function renderOverview(){
       <div class="fc-row"><span class="fc-row-label">Total collected</span><span class="fc-row-val g">${fmt(totalPaid)}</span></div>`}
       <div class="fc-driver">
         <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${avBg[ci]};color:${avFg[ci]}">${initials(v.driver)}</div>
-        <span style="font-size:13px;color:var(--txt2)">${v.driver}</span>
-        <span style="font-size:12px;color:var(--txt3);margin-left:4px;">${v.phone}</span>
+        <span style="font-size:13px;color:var(--txt2)">${h(v.driver)}</span>
+        <span style="font-size:12px;color:var(--txt3);margin-left:4px;">${h(v.phone)}</span>
+      </div>
       </div>
     </div>`;
   }).join('');
@@ -1405,8 +1450,8 @@ function renderDrivers(){
       <div class="driver-card-top">
         <div class="avatar" style="width:44px;height:44px;font-size:15px;background:${avBg[ci]};color:${avFg[ci]}">${initials(d.name)}</div>
         <div class="driver-info">
-          <h3>${d.name}</h3>
-          <p>${d.phone||'—'}</p>
+          <h3>${h(d.name)}</h3>
+          <p>${h(d.phone)||'—'}</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-left:auto;">
           <button type="button" class="del-driver-btn" style="background:var(--blue-pale);border-color:rgba(55,138,221,.3);color:var(--blue);" onclick="event.stopPropagation();openEditDriverModal(${i})" title="Edit driver">✏ Edit</button>
@@ -1419,10 +1464,10 @@ function renderDrivers(){
         <div class="ds-item"><strong>${fmtK(totalCollected)}</strong>Collected</div>
       </div>
       <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--bdr);font-size:12px;color:var(--txt3);">
-        NIC: <span style="font-family:var(--font-mono);color:var(--txt2)">${d.nic||'—'}</span> &nbsp;·&nbsp; License: <span style="font-family:var(--font-mono);color:var(--txt2)">${d.license||'—'}</span>
+        NIC: <span style="font-family:var(--font-mono);color:var(--txt2)">${h(d.nic)||'—'}</span> &nbsp;·&nbsp; License: <span style="font-family:var(--font-mono);color:var(--txt2)">${h(d.license)||'—'}</span>
       </div>
-      ${d.address?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">📍 Address: <span style="color:var(--txt2)">${d.address}</span></div>`:''}
-      ${d.emergName?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">Emergency: <span style="color:var(--txt2)">${d.emergName} · ${d.emergPhone}</span></div>`:''}
+      ${d.address?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">📍 Address: <span style="color:var(--txt2)">${h(d.address)}</span></div>`:''}
+      ${d.emergName?`<div style="margin-top:6px;font-size:12px;color:var(--txt3);">Emergency: <span style="color:var(--txt2)">${h(d.emergName)} · ${h(d.emergPhone)}</span></div>`:''}
     </div>`;
   }).join('');
 }
@@ -1435,12 +1480,12 @@ function showDriverDetail(idx){
   let html=`<div class="ov-grid" style="margin-bottom:20px;">
     <div class="info-card"><h4>Contact details</h4>
       <table class="info-table">
-        <tr><td>Phone</td><td>${d.phone||'—'}</td></tr>
-        <tr><td>NIC</td><td style="font-family:var(--font-mono)">${d.nic||'—'}</td></tr>
-        <tr><td>License</td><td style="font-family:var(--font-mono)">${d.license||'—'}</td></tr>
-        <tr><td>Address</td><td>${d.address||'—'}</td></tr>
-        <tr><td>Emergency</td><td>${d.emergName||'—'}</td></tr>
-        <tr><td>Emergency phone</td><td>${d.emergPhone||'—'}</td></tr>
+        <tr><td>Phone</td><td>${h(d.phone)||'—'}</td></tr>
+        <tr><td>NIC</td><td style="font-family:var(--font-mono)">${h(d.nic)||'—'}</td></tr>
+        <tr><td>License</td><td style="font-family:var(--font-mono)">${h(d.license)||'—'}</td></tr>
+        <tr><td>Address</td><td>${h(d.address)||'—'}</td></tr>
+        <tr><td>Emergency</td><td>${h(d.emergName)||'—'}</td></tr>
+        <tr><td>Emergency phone</td><td>${h(d.emergPhone)||'—'}</td></tr>
       </table>
     </div>
     <div class="info-card"><h4>Vehicle history (${d.vehicles.length} vehicle${d.vehicles.length!==1?'s':''})</h4>`;
@@ -1449,8 +1494,8 @@ function showDriverDetail(idx){
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--bdr);">
         <div class="type-icon" style="background:${typeBg[v.type]};width:32px;height:32px;font-size:14px;">${typeEmoji[v.type]}</div>
         <div>
-          <div style="font-size:13px;font-weight:500;color:var(--txt)">${v.name}</div>
-          <div style="font-size:11px;color:var(--txt3);font-family:var(--font-mono)">${v.plate} · Since ${new Date(v.startDate).toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--txt)">${h(v.name)}</div>
+          <div style="font-size:11px;color:var(--txt3);font-family:var(--font-mono)">${h(v.plate)} · Since ${new Date(v.startDate).toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>
         </div>
         <div style="margin-left:auto;cursor:pointer;" onclick="showVehicle(${v.id})" class="btn btn-ghost btn-sm">View</div>
       </div>`).join('');
@@ -1487,7 +1532,7 @@ function renderReports(){
     const pct=Math.round(paid/v.rent*100);
     const barW=Math.round(paid/maxRent*100);
     return `<div class="bar-row">
-      <div class="bar-label">${v.name.split(' ').slice(0,2).join(' ')}</div>
+      <div class="bar-label">${h(v.name.split(' ').slice(0,2).join(' '))}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${barW}%;background:${paid>=v.rent?'var(--teal)':'var(--amber)'}"></div></div>
       <div class="bar-val">${fmtK(paid)} <span style="color:var(--txt3)">(${pct}%)</span></div>
     </div>`;
@@ -1508,7 +1553,7 @@ function renderReports(){
     const total=income+expenses||1;
     return `<div style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-        <span style="color:var(--txt)">${v.name}</span>
+        <span style="color:var(--txt)">${h(v.name)}</span>
         <span style="color:${profit>=0?'var(--teal-glow)':'var(--red)'};font-weight:500">${fmt(profit)} net</span>
       </div>
       <div class="profit-bar">
@@ -1525,7 +1570,7 @@ function renderReports(){
   const rows=rentalVehicles.map(v=>{
     const p=v.payments.find(p=>p.month===cm);
     const paid=p&&p.paid==='paid'?p.paidAmount||p.amount:p&&p.paid==='partial'?p.paidAmount||0:0;
-    return `<tr><td>${v.name}</td><td style="text-align:right">${fmt(v.rent)}</td><td style="text-align:right;color:${paid>=v.rent?'var(--teal-glow)':'var(--amber)'}">${fmt(paid)}</td><td style="text-align:right;color:var(--txt3)">${fmt(v.rent-paid)}</td></tr>`;
+    return `<tr><td>${h(v.name)}</td><td style="text-align:right">${fmt(v.rent)}</td><td style="text-align:right;color:${paid>=v.rent?'var(--teal-glow)':'var(--amber)'}">${fmt(paid)}</td><td style="text-align:right;color:var(--txt3)">${fmt(v.rent-paid)}</td></tr>`;
   }).join('');
   document.getElementById('rep-summary-table').innerHTML=`
     <thead><tr><th style="text-align:left;font-size:11px;color:var(--txt3);padding:8px 0;border-bottom:0.5px solid var(--bdr);font-weight:500;text-transform:uppercase;letter-spacing:.5px">Vehicle</th><th style="text-align:right;font-size:11px;color:var(--txt3);padding:8px 0;border-bottom:0.5px solid var(--bdr);font-weight:500;text-transform:uppercase;letter-spacing:.5px">Expected</th><th style="text-align:right;font-size:11px;color:var(--txt3);padding:8px 0;border-bottom:0.5px solid var(--bdr);font-weight:500;text-transform:uppercase;letter-spacing:.5px">Collected</th><th style="text-align:right;font-size:11px;color:var(--txt3);padding:8px 0;border-bottom:0.5px solid var(--bdr);font-weight:500;text-transform:uppercase;letter-spacing:.5px">Balance</th></tr></thead>
@@ -1619,15 +1664,51 @@ function buildVehiclePage(v){
   // document expiry — extended (6 doc types with inline edit)
   const docExpiry = buildDocExpiry(v);
 
-  // expenses
-  const expRows=(v.expenses||[]).slice().reverse().map(e=>`<tr>
-    <td>${e.date}</td>
-    <td><span class="exp-type">${e.type}</span></td>
-    <td>${e.desc}</td>
-    <td style="font-family:var(--font-mono);color:var(--red)">${fmt(e.amount)}</td>
-  </tr>`).join('');
+  // expenses — computed outside template literal to avoid IIFE fragility
   const totalExpenses=(v.expenses||[]).reduce((s,e)=>s+e.amount,0);
   const profitBal=totalPaid-totalExpenses;
+  const ownerExp=(v.expenses||[]).filter(e=>e.paidBy!=='driver');
+  const driverExp=(v.expenses||[]).filter(e=>e.paidBy==='driver');
+  const ownerTotal=ownerExp.reduce((s,e)=>s+e.amount,0);
+  const driverTotal=driverExp.reduce((s,e)=>s+e.amount,0);
+  const ownerExpRows=ownerExp.slice().reverse().map(e=>`<tr>
+    <td>${e.date}</td>
+    <td><span class="exp-type">${h(e.type)}</span></td>
+    <td>${h(e.desc)}</td>
+    <td style="font-family:var(--font-mono);color:var(--red)">${fmt(e.amount)}</td>
+    <td><button type="button" onclick="deleteExpense(${v.id},${e.id})" style="font-size:11px;padding:3px 9px;border-radius:6px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.3);color:var(--red);cursor:pointer;font-family:var(--font-body);line-height:1.4;" title="Delete expense">✕</button></td>
+  </tr>`).join('');
+  const driverExpRows=driverExp.slice().reverse().map(e=>`<tr>
+    <td>${e.date}</td>
+    <td><span class="exp-type">${h(e.type)}</span></td>
+    <td>${h(e.desc)}</td>
+    <td style="font-family:var(--font-mono);color:var(--blue)">${fmt(e.amount)}</td>
+    <td><button type="button" onclick="deleteExpense(${v.id},${e.id})" style="font-size:11px;padding:3px 9px;border-radius:6px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.3);color:var(--red);cursor:pointer;font-family:var(--font-body);line-height:1.4;" title="Delete expense">✕</button></td>
+  </tr>`).join('');
+  const expensesTabHtml=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div>
+        <span style="font-size:13px;color:var(--txt3)">Total expenses: </span><span style="font-size:15px;font-weight:600;color:var(--red)">${fmt(totalExpenses)}</span>
+        &nbsp;&nbsp;<span style="font-size:13px;color:var(--txt3)">Net profit: </span><span style="font-size:15px;font-weight:600;color:${profitBal>=0?'var(--teal-glow)':'var(--red)'}">${fmt(profitBal)}</span>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="openExpense(${v.id})">+ Add expense</button>
+    </div>
+    <div class="section-divider"><h4>🏠 Owner's expenses</h4></div>
+    <div style="margin-bottom:8px;"><span style="font-size:12px;color:var(--txt3)">Total: <span style="color:var(--red);font-weight:600;">${fmt(ownerTotal)}</span></span></div>
+    <div class="dep-section" style="margin-bottom:20px;">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th></th></tr></thead>
+        <tbody>${ownerExpRows||`<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">No owner expenses recorded.</td></tr>`}</tbody>
+      </table>
+    </div>
+    <div class="section-divider"><h4>🚗 Driver's individual expenses</h4></div>
+    <div style="margin-bottom:8px;"><span style="font-size:12px;color:var(--txt3)">Total: <span style="color:var(--blue);font-weight:600;">${fmt(driverTotal)}</span></span></div>
+    <div class="dep-section">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th></th></tr></thead>
+        <tbody>${driverExpRows||`<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">No driver expenses recorded.</td></tr>`}</tbody>
+      </table>
+    </div>`;
 
   // deposit
   const dep=v.deposit||{};
@@ -1642,21 +1723,21 @@ function buildVehiclePage(v){
   </div>`;
 
   // handovers
-  const handoverRows=(v.handovers||[]).slice().reverse().map(h=>{
-    const photosHtml = (h.photos && h.photos.length) ? `
+  const handoverRows=(v.handovers||[]).slice().reverse().map(hov=>{
+    const photosHtml = (hov.photos && hov.photos.length) ? `
       <div style="margin-top:10px;">
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📸 ${h.photos.length} photo${h.photos.length!==1?'s':''}</div>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📸 ${hov.photos.length} photo${hov.photos.length!==1?'s':''}</div>
         <div class="handover-photos-grid">
-          ${h.photos.map((url,i)=>{const cleanUrl=url.replace('#local','');const isLocal=url.endsWith('#local');return `<div class="handover-photo-item" onclick="openLightbox('${cleanUrl}','${h.type==='Out'?'Handover OUT':'Return IN'} — ${h.date} · Photo ${i+1}')"><img src="${cleanUrl}" alt="Photo ${i+1}" loading="lazy"/>${isLocal?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fa0;font-size:9px;text-align:center;padding:2px">local only</div>':''}</div>`;}).join('')}
+          ${hov.photos.map((url,i)=>{const cleanUrl=url.replace('#local','');const isLocal=url.endsWith('#local');return `<div class="handover-photo-item" onclick="openLightbox('${cleanUrl}','${hov.type==='Out'?'Handover OUT':'Return IN'} — ${hov.date} · Photo ${i+1}')"><img src="${cleanUrl}" alt="Photo ${i+1}" loading="lazy"/>${isLocal?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fa0;font-size:9px;text-align:center;padding:2px">local only</div>':''}</div>`;}).join('')}
         </div>
       </div>` : '';
     return `<div class="handover-entry">
-      <h5>${h.type==='Out'?'🚗 Handover OUT':'🔁 Return IN'} — ${h.date}</h5>
+      <h5>${hov.type==='Out'?'🚗 Handover OUT':'🔁 Return IN'} — ${hov.date}</h5>
       <div class="handover-grid">
-        <div class="hg-item"><label>Driver</label><div class="hg-val">${h.driver}</div></div>
-        <div class="hg-item"><label>Odometer</label><div class="hg-val">${h.odo?h.odo.toLocaleString()+' km':'—'}</div></div>
-        <div class="hg-item"><label>Notes</label><div class="hg-val" style="font-size:12px;color:var(--txt2)">${h.notes||'—'}</div></div>
-        <div class="hg-item"><label>Distance</label><div class="hg-val g">${getHandoverDist(v,h)}</div></div>
+        <div class="hg-item"><label>Driver</label><div class="hg-val">${h(hov.driver)}</div></div>
+        <div class="hg-item"><label>Odometer</label><div class="hg-val">${hov.odo?hov.odo.toLocaleString()+' km':'—'}</div></div>
+        <div class="hg-item"><label>Notes</label><div class="hg-val" style="font-size:12px;color:var(--txt2)">${h(hov.notes)||'—'}</div></div>
+        <div class="hg-item"><label>Distance</label><div class="hg-val g">${getHandoverDist(v,hov)}</div></div>
       </div>
       ${photosHtml}
     </div>`;
@@ -1665,8 +1746,8 @@ function buildVehiclePage(v){
   // notes
   const noteRows=(v.noteEntries||[]).slice().reverse().map(n=>`
     <div class="note-entry">
-      <div class="note-meta">${n.date} — <span class="${n.tag==='damage'?'damage-tag':n.tag==='maintenance'?'maint-tag':'insp-tag'}">${n.tag}</span></div>
-      <div class="note-body">${n.text}</div>
+      <div class="note-meta">${n.date} — <span class="${n.tag==='damage'?'damage-tag':n.tag==='maintenance'?'maint-tag':'insp-tag'}">${h(n.tag)}</span></div>
+      <div class="note-body">${h(n.text)}</div>
     </div>`).join('');
 
   // maintenance
@@ -1713,7 +1794,7 @@ function buildVehiclePage(v){
       <td>${entry.date}</td>
       <td style="font-family:var(--font-mono);font-weight:500">${entry.reading.toLocaleString()} km</td>
       <td>${delta!==null?`<span class="odo-delta ${deltaClass}">+${delta.toLocaleString()} km</span>`:'<span class="odo-delta none">—</span>'}</td>
-      <td style="color:var(--txt3);font-size:12px">${entry.note||'—'}</td>
+      <td style="color:var(--txt3);font-size:12px">${h(entry.note)||'—'}</td>
       <td><button type="button" onclick="deleteOdoEntry(${v.id},${entry.id})" style="font-size:11px;padding:3px 9px;border-radius:6px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.3);color:var(--red);cursor:pointer;font-family:var(--font-body);line-height:1.4;" title="Delete this reading">✕</button></td>
     </tr>`;
   }).join('');
@@ -1732,10 +1813,10 @@ function buildVehiclePage(v){
           }
           <div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <div class="vp-title">${v.name}</div>
+              <div class="vp-title">${h(v.name)}</div>
               <span class="status-pill ${pillCls}">${pillTxt}</span>
             </div>
-            <div class="vp-plate">${v.plate} &nbsp;·&nbsp; ${v.type} ${v.year}</div>
+            <div class="vp-plate">${h(v.plate)} &nbsp;·&nbsp; ${h(v.type)} ${v.year}</div>
           </div>
         </div>
         <div class="vp-actions">
@@ -1782,28 +1863,28 @@ function buildVehiclePage(v){
         <div class="ov-grid">
           <div class="info-card"><h4>Vehicle details</h4>
             <table class="info-table">
-              <tr><td>Type</td><td>${v.type}</td></tr>
+              <tr><td>Type</td><td>${h(v.type)}</td></tr>
               <tr><td>Year</td><td>${v.year}</td></tr>
-              <tr><td>Plate no.</td><td style="font-family:var(--font-mono)">${v.plate}</td></tr>
-              <tr><td>Fee structure</td><td>${v.feeType}</td></tr>
+              <tr><td>Plate no.</td><td style="font-family:var(--font-mono)">${h(v.plate)}</td></tr>
+              <tr><td>Fee structure</td><td>${h(v.feeType)}</td></tr>
               <tr><td>Rental start</td><td>${new Date(v.startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td></tr>
               <tr><td>Due day</td><td>Every ${ordinal(v.dueDay)} of month</td></tr>
-              ${v.notes?`<tr><td>Notes</td><td>${v.notes}</td></tr>`:''}
+              ${v.notes?`<tr><td>Notes</td><td>${h(v.notes)}</td></tr>`:''}
             </table>
           </div>
           <div class="info-card"><h4>Driver details</h4>
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
               <div class="avatar" style="width:44px;height:44px;font-size:15px;background:${avBg[ci]};color:${avFg[ci]}">${initials(v.driver)}</div>
               <div>
-                <div style="font-size:15px;font-weight:500;color:var(--txt)">${v.driver}</div>
-                <div style="font-size:12px;color:var(--txt3);margin-top:2px;">${v.phone}</div>
+                <div style="font-size:15px;font-weight:500;color:var(--txt)">${h(v.driver)}</div>
+                <div style="font-size:12px;color:var(--txt3);margin-top:2px;">${h(v.phone)}</div>
               </div>
             </div>
             <table class="info-table">
-              <tr><td>NIC</td><td style="font-family:var(--font-mono)">${v.nic||'—'}</td></tr>
-              <tr><td>License no.</td><td style="font-family:var(--font-mono)">${v.license||'—'}</td></tr>
-              <tr><td>Address</td><td>${v.address||'—'}</td></tr>
-              <tr><td>Emergency</td><td>${v.emergName||'—'} (${v.emergPhone||'—'})</td></tr>
+              <tr><td>NIC</td><td style="font-family:var(--font-mono)">${h(v.nic)||'—'}</td></tr>
+              <tr><td>License no.</td><td style="font-family:var(--font-mono)">${h(v.license)||'—'}</td></tr>
+              <tr><td>Address</td><td>${h(v.address)||'—'}</td></tr>
+              <tr><td>Emergency</td><td>${h(v.emergName)||'—'} (${h(v.emergPhone)||'—'})</td></tr>
               <tr><td>Since</td><td>${new Date(v.startDate).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td></tr>
             </table>
           </div>
@@ -1839,6 +1920,9 @@ function buildVehiclePage(v){
             <button type="button" class="btn btn-amber" onclick="openPartialFromForm(${v.id})">Partial</button>
           </div>
         </div>`:`<div class="all-paid-banner">✓ All payments up to date for this vehicle.</div>`}
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="openManualPayment(${v.id})" style="border-color:rgba(139,111,212,.4);color:var(--purple);">+ Manual payment entry</button>
+        </div>
         <div class="hist-section">
           <table>
             <thead><tr><th>Month</th><th>Due</th><th>Paid</th><th>Due date</th><th>Paid on</th><th>Status</th><th>Actions</th></tr></thead>
@@ -1861,17 +1945,7 @@ function buildVehiclePage(v){
 
       <!-- EXPENSES TAB -->
       <div class="itab-content" id="tab-${v.id}-expenses">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div><span style="font-size:13px;color:var(--txt3)">Total expenses: </span><span style="font-size:15px;font-weight:600;color:var(--red)">${fmt(totalExpenses)}</span>
-          &nbsp;&nbsp;<span style="font-size:13px;color:var(--txt3)">Net profit: </span><span style="font-size:15px;font-weight:600;color:${profitBal>=0?'var(--teal-glow)':'var(--red)'}">${fmt(profitBal)}</span></div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="openExpense(${v.id})">+ Add expense</button>
-        </div>
-        <div class="dep-section">
-          <table>
-            <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead>
-            <tbody>${expRows||`<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:20px">No expenses recorded.</td></tr>`}</tbody>
-          </table>
-        </div>
+        ${expensesTabHtml}
       </div>
 
       <!-- HANDOVER TAB -->
@@ -2057,9 +2131,28 @@ function openExpense(vid){
       <div class="mfg"><label>Date</label><input id="exp-date" type="date" value="${todayStr}" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"></div>
       <div class="mfg"><label>Type</label><select id="exp-type" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"><option>Fuel</option><option>Maintenance</option><option>Repair</option><option>Insurance</option><option>Other</option></select></div>
     </div>
+    <div class="mfg" style="margin-bottom:12px;"><label>Paid by</label>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button type="button" id="exp-by-owner" onclick="setExpPaidBy('owner')" style="flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid rgba(29,158,117,.5);background:var(--teal-pale);color:var(--teal-glow);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;">🏠 Owner's expense</button>
+        <button type="button" id="exp-by-driver" onclick="setExpPaidBy('driver')" style="flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;">🚗 Driver's expense</button>
+      </div>
+      <input type="hidden" id="exp-paidby" value="owner"/>
+    </div>
     <div class="mfg" style="margin-bottom:12px;"><label>Description</label><input id="exp-desc" placeholder="e.g. Oil change" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"></div>
     <div class="mfg"><label>Amount (LKR)</label><input id="exp-amt" type="number" placeholder="0" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"></div>`;
   openModal('expense-modal');
+}
+function setExpPaidBy(val){
+  document.getElementById('exp-paidby').value=val;
+  const ownerBtn=document.getElementById('exp-by-owner');
+  const driverBtn=document.getElementById('exp-by-driver');
+  if(val==='owner'){
+    ownerBtn.style.cssText='flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid rgba(29,158,117,.5);background:var(--teal-pale);color:var(--teal-glow);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;';
+    driverBtn.style.cssText='flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;';
+  } else {
+    ownerBtn.style.cssText='flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;';
+    driverBtn.style.cssText='flex:1;padding:9px 8px;border-radius:8px;border:0.5px solid rgba(55,138,221,.5);background:var(--blue-pale);color:var(--blue);cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font-body);transition:all .15s;';
+  }
 }
 function confirmExpense(){
   if(!expenseCtx)return;
@@ -2068,13 +2161,69 @@ function confirmExpense(){
   const type=document.getElementById('exp-type').value;
   const desc=document.getElementById('exp-desc').value.trim();
   const amount=parseInt(document.getElementById('exp-amt').value)||0;
+  const paidBy=document.getElementById('exp-paidby').value||'owner';
   if(!desc||!amount){alert('Fill in description and amount.');return;}
   if(!v.expenses)v.expenses=[];
-  v.expenses.push({id:Date.now(),date,type,desc,amount});
+  v.expenses.push({id:Date.now(),date,type,desc,amount,paidBy});
   closeModal('expense-modal');refreshVehicle(expenseCtx.vid);
 }
 
-// ── HANDOVER ACTIONS ──────────────────────────────────────────
+// ── DELETE EXPENSE ────────────────────────────────────────────
+function deleteExpense(vid, expId){
+  if(!confirm('Delete this expense record?'))return;
+  const v=vehicles.find(x=>x.id===vid);
+  if(!v)return;
+  v.expenses=(v.expenses||[]).filter(e=>e.id!==expId);
+  refreshVehicle(vid);window._db.saveVehicle(v);
+}
+
+// ── MANUAL PAYMENT ─────────────────────────────────────────────
+let manualPayCtx=null;
+function openManualPayment(vid){
+  manualPayCtx={vid};
+  const v=vehicles.find(x=>x.id===vid);
+  document.getElementById('mp-month').value='';
+  document.getElementById('mp-amount').value=v.rent||'';
+  document.getElementById('mp-duedate').value=todayStr;
+  document.getElementById('mp-paiddate').value=todayStr;
+  document.getElementById('mp-paidamount').value=v.rent||'';
+  document.getElementById('mp-status').value='paid';
+  document.getElementById('mp-note').value='';
+  openModal('manual-payment-modal');
+}
+function confirmManualPayment(){
+  if(!manualPayCtx)return;
+  const v=vehicles.find(x=>x.id===manualPayCtx.vid);
+  const month=document.getElementById('mp-month').value.trim();
+  const amount=parseInt(document.getElementById('mp-amount').value)||0;
+  const duedate=document.getElementById('mp-duedate').value;
+  const paiddate=document.getElementById('mp-paiddate').value;
+  const paidamount=parseInt(document.getElementById('mp-paidamount').value)||0;
+  const status=document.getElementById('mp-status').value;
+  const note=document.getElementById('mp-note').value.trim();
+  if(!month||!amount){alert('Please fill in month label and amount.');return;}
+  // Check if this month already exists
+  const existing=v.payments.find(p=>p.month===month);
+  if(existing){
+    if(!confirm(`A payment record for "${month}" already exists. Overwrite it?`))return;
+    existing.amount=amount;
+    existing.paid=status;
+    existing.paidAmount=paidamount;
+    existing.dueDate=duedate?new Date(duedate).toLocaleDateString('en-GB'):'';
+    existing.paidDate=paiddate?new Date(paiddate).toLocaleDateString('en-GB'):'';
+    if(note)existing.note=note;
+  } else {
+    v.payments.push({
+      month,amount,paid:status,paidAmount:paidamount,
+      dueDate:duedate?new Date(duedate).toLocaleDateString('en-GB'):'',
+      paidDate:paiddate?new Date(paiddate).toLocaleDateString('en-GB'):'',
+      note:note||null,manual:true
+    });
+  }
+  closeModal('manual-payment-modal');
+  refreshVehicle(manualPayCtx.vid);renderOverview();renderSidebar();
+  window._db.saveVehicle(v);
+}
 function openHandover(vid){
   handoverCtx={vid, pendingFiles:[]};
   document.getElementById('handover-modal-body').innerHTML=`
