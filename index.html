@@ -449,7 +449,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       <button type="button" class="pin-key wide" onclick="pinPress(0)">0</button>
       <button type="button" class="pin-key del" onclick="pinDel()">⌫</button>
     </div>
-    <div class="login-hint">Default PIN: <strong style="color:var(--teal-glow)">1234</strong></div>
   </div>
 </div>
 
@@ -2689,7 +2688,7 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 // ── SECURITY / PIN LOGIN ─────────────────────────────────────
-const CORRECT_PIN = '1234'; // Change this to your desired PIN
+const CORRECT_PIN = '1968'; // Change this to your desired PIN
 let pinEntry = '';
 function pinPress(digit) {
   if (pinEntry.length >= 4) return;
