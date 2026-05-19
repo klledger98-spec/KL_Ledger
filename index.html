@@ -213,10 +213,23 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .vehicle-photo-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:block;margin-top:8px;border:0.5px solid var(--bdr2);}
 .vp-photo-wrap{width:70px;height:70px;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative;cursor:pointer;}
 .vp-photo-wrap img{width:100%;height:100%;object-fit:cover;}
-.vp-photo-wrap:hover::after{content:'✏️';position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px;}
-.vp-photo-edit-btn{font-size:11px;padding:3px 9px;border-radius:6px;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--txt3);cursor:pointer;font-family:var(--font-body);transition:all .15s;margin-top:4px;display:block;text-align:center;}
-.vp-photo-edit-btn:hover{background:var(--bg4);color:var(--txt);}
+.vp-photo-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px;opacity:0;transition:opacity .15s;}
+.vp-photo-wrap:hover .vp-photo-overlay{opacity:1;}
 .fc-vehicle-photo{width:38px;height:38px;border-radius:9px;object-fit:cover;border:0.5px solid var(--bdr2);flex-shrink:0;}
+
+/* ── DRIVER HISTORY ── */
+.driver-history-section{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);overflow:hidden;margin-top:16px;}
+.driver-history-section h4{font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;padding:14px 18px;background:var(--bg3);border-bottom:0.5px solid var(--bdr);margin:0;}
+.driver-history-table{width:100%;border-collapse:collapse;}
+.driver-history-table th{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;background:var(--bg3);text-align:left;font-weight:500;border-bottom:0.5px solid var(--bdr);}
+.driver-history-table td{font-size:13px;padding:10px 16px;border-top:0.5px solid var(--bdr);color:var(--txt);vertical-align:top;}
+.driver-history-table tbody tr:hover td{background:var(--bg3);}
+.dh-current-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--teal-pale);color:var(--teal-glow);border:0.5px solid rgba(29,158,117,.25);font-weight:500;}
+.dh-past-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--bg4);color:var(--txt3);border:0.5px solid var(--bdr2);font-weight:500;}
+.dh-name{font-weight:500;color:var(--txt);margin-bottom:2px;}
+.dh-meta{font-size:11px;color:var(--txt3);}
+.change-driver-btn{font-size:12px;padding:5px 12px;border-radius:7px;background:var(--blue-pale);border:0.5px solid rgba(55,138,221,.35);color:var(--blue);cursor:pointer;font-family:var(--font-body);transition:all .15s;font-weight:500;}
+.change-driver-btn:hover{background:rgba(55,138,221,.18);}
 
 /* ── FEE HISTORY ── */
 .fee-history-section{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);overflow:hidden;margin-top:16px;}
@@ -229,6 +242,33 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .fee-past-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--bg4);color:var(--txt3);border:0.5px solid var(--bdr2);font-weight:500;margin-left:8px;}
 .fee-increase-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--red-pale);color:var(--red);font-weight:500;}
 .fee-decrease-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--teal-pale);color:var(--teal-glow);font-weight:500;}
+
+/* ── SERVICES TAB ── */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
+.svc-card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);padding:16px 18px;position:relative;transition:border-color .15s;}
+.svc-card:hover{border-color:var(--bdr2);}
+.svc-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.svc-icon{font-size:20px;margin-right:8px;}
+.svc-name{font-size:14px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:6px;}
+.svc-status{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;}
+.svc-ok{background:var(--teal-pale);color:var(--teal-glow);}
+.svc-due{background:var(--amber-pale);color:var(--amber);}
+.svc-overdue{background:var(--red-pale);color:var(--red);}
+.svc-unknown{background:var(--bg4);color:var(--txt3);}
+.svc-meta{font-size:12px;color:var(--txt3);margin-bottom:4px;}
+.svc-meta strong{color:var(--txt);font-weight:500;}
+.svc-progress-track{height:4px;background:var(--bg4);border-radius:2px;margin:10px 0 6px;overflow:hidden;}
+.svc-progress-fill{height:100%;border-radius:2px;transition:width .3s;}
+.svc-progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--txt3);}
+.svc-update-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--txt2);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+.svc-update-btn:hover{background:var(--bg4);color:var(--txt);}
+.svc-log-section{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);overflow:hidden;}
+.svc-log-section h4{font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;padding:12px 18px;background:var(--bg3);border-bottom:0.5px solid var(--bdr);margin:0;display:flex;align-items:center;justify-content:space-between;}
+.svc-log-table{width:100%;border-collapse:collapse;}
+.svc-log-table th{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;background:var(--bg3);text-align:left;font-weight:500;border-bottom:0.5px solid var(--bdr);}
+.svc-log-table td{font-size:13px;padding:10px 16px;border-top:0.5px solid var(--bdr);color:var(--txt);vertical-align:middle;}
+.svc-log-table tbody tr:hover td{background:var(--bg3);}
+.svc-type-badge{font-size:11px;padding:2px 8px;border-radius:5px;font-weight:500;}
 
 /* ── ALERTS PAGE ── */
 .alerts-list{display:flex;flex-direction:column;gap:10px;}
@@ -542,6 +582,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <button type="button" class="filter-btn" onclick="filterAlerts('payment',this)">Payments</button>
         <button type="button" class="filter-btn" onclick="filterAlerts('document',this)">Documents</button>
         <button type="button" class="filter-btn" onclick="filterAlerts('maintenance',this)">Maintenance</button>
+        <button type="button" class="filter-btn" onclick="filterAlerts('service',this)">Services</button>
       </div>
       <div class="alerts-list" id="alerts-list"></div>
     </div>
@@ -704,13 +745,18 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;">Document expiry dates</div>
       <div class="mfrow-3">
         <div class="mfg"><label>Revenue license</label><input id="f-doc-rl" type="date"/></div>
-        <div class="mfg"><label>Insurance</label><input id="f-doc-ins" type="date"/></div>
-        <div class="mfg"><label>Emission test</label><input id="f-doc-emi" type="date"/></div>
+        <div class="mfg"><label>Insurance expiry</label><input id="f-doc-ins" type="date"/></div>
+        <div class="mfg"><label>Insurance type</label>
+          <select id="f-ins-type" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+            <option value="">— Select type —</option>
+            <option value="full">Full Insurance</option>
+            <option value="3rd">3rd Party Insurance</option>
+          </select>
+        </div>
       </div>
-      <div class="mfrow-3">
-        <div class="mfg"><label>Fitness certificate</label><input id="f-doc-fit" type="date"/></div>
-        <div class="mfg"><label>Road / Route permit</label><input id="f-doc-rp" type="date"/></div>
-        <div class="mfg"><label>Vehicle auth (VIC/TAX)</label><input id="f-doc-vat" type="date"/></div>
+      <div class="mfrow">
+        <div class="mfg"><label>Emission test</label><input id="f-doc-emi" type="date"/></div>
+        <div class="mfg"></div>
       </div>
       <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;">Maintenance reminder</div>
       <div class="mfrow-3">
@@ -872,7 +918,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
       <div class="mfrow">
         <div class="mfg"><label>Paid amount (LKR)</label><input id="mp-paidamount" type="number" placeholder="Leave 0 if unpaid" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%"/></div>
         <div class="mfg"><label>Status</label>
-          <select id="mp-status" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+          <select id="mp-status" onchange="(function(){const s=document.getElementById('mp-status').value;const pa=document.getElementById('mp-paidamount');if(s==='pending'){pa.value='';}else if(s==='paid'){pa.value=document.getElementById('mp-amount').value;}})()" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
             <option value="paid">Paid</option>
             <option value="partial">Partial</option>
             <option value="pending">Pending</option>
@@ -896,10 +942,14 @@ body{display:flex;flex-direction:column;min-height:100vh;}
     <div class="modal-body">
       <p style="font-size:13px;color:var(--txt3);margin-bottom:16px;">Enter the current odometer reading to reset the service counter. This will update "Last service" and restart the km/month interval.</p>
       <div class="mfrow">
-        <div class="mfg"><label>Service date</label><input id="svc-date" type="date"/></div>
-        <div class="mfg"><label>Odometer at service (km)</label><input id="svc-odo" type="number" placeholder="e.g. 58000"/></div>
+        <div class="mfg"><label>Service date</label><input id="sd-date" type="date"/></div>
+        <div class="mfg"><label>Odometer at service (km)</label><input id="sd-odo" type="number" placeholder="e.g. 58000"/></div>
       </div>
-      <div class="mfg"><label>Notes (optional)</label><input id="svc-note" placeholder="e.g. Oil change, filter replaced..."/></div>
+      <div class="mfrow">
+        <div class="mfg"><label>Service interval (km) <span style="font-weight:400;color:var(--txt3)">e.g. 5000</span></label><input id="sd-serv-km" type="number" placeholder="e.g. 5000"/></div>
+        <div class="mfg"><label>Service interval (months) <span style="font-weight:400;color:var(--txt3)">optional</span></label><input id="sd-serv-mo" type="number" placeholder="e.g. 6"/></div>
+      </div>
+      <div class="mfg"><label>Notes (optional)</label><input id="sd-note" placeholder="e.g. Oil change, filter replaced..."/></div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" onclick="closeModal('service-done-modal')">Cancel</button>
@@ -999,6 +1049,107 @@ body{display:flex;flex-direction:column;min-height:100vh;}
         <button type="button" class="btn btn-ghost" onclick="closeModal('vehicle-photo-modal')">Cancel</button>
         <button type="button" class="btn btn-primary" onclick="document.getElementById('vehicle-photo-edit-input').click()">📷 Upload photo</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD OTHER SERVICE MODAL -->
+<div class="modal-overlay" id="add-other-svc-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head"><h3>Add other part / service</h3><button type="button" class="modal-close" onclick="closeModal('add-other-svc-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--txt3);margin-bottom:16px;">Add a custom part or service not listed above — e.g. Suspension, AC service, Wheel alignment, etc.</p>
+      <div class="mfg" style="margin-bottom:12px;"><label>Part / Service name</label><input id="other-svc-name" placeholder="e.g. Wheel alignment, AC regas, Suspension…" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);"/></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('add-other-svc-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmAddOtherSvc()">Add &amp; log service</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE UPDATE MODAL -->
+<div class="modal-overlay" id="svc-update-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head"><h3 id="svc-modal-title">Update service</h3><button type="button" class="modal-close" onclick="closeModal('svc-update-modal')">✕</button></div>
+    <div class="modal-body">
+      <div style="background:var(--teal-pale);border:0.5px solid rgba(29,158,117,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--teal-glow);">
+        ✓ This will log the entry and update the "last done" status for this service type.
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Date done</label><input id="svc-date" type="date"/></div>
+        <div class="mfg"><label>Odometer at service (km)</label><input id="svc-odo" type="number" placeholder="e.g. 48500"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Interval — km <span style="font-weight:400;color:var(--txt3)">(override default)</span></label><input id="svc-interval-km" type="number" placeholder="e.g. 5000"/></div>
+        <div class="mfg"><label>Interval — months</label><input id="svc-interval-mo" type="number" placeholder="e.g. 6"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Cost (LKR, optional)</label><input id="svc-cost" type="number" placeholder="e.g. 4500"/></div>
+        <div class="mfg"><label>Shop / garage (optional)</label><input id="svc-shop" placeholder="e.g. City Auto"/></div>
+      </div>
+      <div class="mfrow" style="grid-template-columns:1fr;">
+        <div class="mfg"><label>Notes (optional)</label><input id="svc-notes" placeholder="e.g. Used Mobil 5W-30 synthetic"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('svc-update-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmSvcUpdate()">Save service record</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE DRIVER MODAL -->
+<div class="modal-overlay" id="change-driver-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head"><h3>Change driver</h3><button type="button" class="modal-close" onclick="closeModal('change-driver-modal')">✕</button></div>
+    <div class="modal-body">
+      <div style="background:var(--blue-pale);border:0.5px solid rgba(55,138,221,.3);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--blue);">
+        ℹ The current driver will be archived to history. Pending unpaid payments can be cleared or kept.
+      </div>
+      <!-- Current driver summary -->
+      <div id="cd-current-summary" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--txt2);"></div>
+
+      <!-- New driver: pick existing or fill manually -->
+      <div class="mfg" style="margin-bottom:10px;">
+        <label>Select existing driver <span style="font-weight:400;color:var(--txt3)">(optional — auto-fills fields below)</span></label>
+        <select id="cd-existing-driver" onchange="fillCDFromSelect(this.value)" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+          <option value="">— Type manually or pick existing —</option>
+        </select>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>New driver name</label><input id="cd-driver" placeholder="Full name"/></div>
+        <div class="mfg"><label>Phone</label><input id="cd-phone" placeholder="07X XXX XXXX"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>NIC</label><input id="cd-nic" placeholder="XXXXXXXXXV"/></div>
+        <div class="mfg"><label>License no.</label><input id="cd-license" placeholder="B1234567"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>Emergency contact name</label><input id="cd-emerg-name" placeholder="Name"/></div>
+        <div class="mfg"><label>Emergency contact phone</label><input id="cd-emerg-phone" placeholder="07X XXX XXXX"/></div>
+      </div>
+      <div class="mfrow" style="grid-template-columns:1fr;">
+        <div class="mfg"><label>Address</label><input id="cd-address" placeholder="e.g. No. 12, Main Street, Colombo"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg"><label>New rental start date</label><input id="cd-start" type="date"/></div>
+        <div class="mfg"><label>New security deposit (LKR)</label><input id="cd-deposit" type="number" placeholder="e.g. 50000"/></div>
+      </div>
+      <div class="mfrow">
+        <div class="mfg">
+          <label>Unpaid / pending payments</label>
+          <select id="cd-payments-action" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:8px;color:var(--txt);font-size:13px;padding:8px 11px;width:100%;font-family:var(--font-body);">
+            <option value="clear">Clear all pending payments (new driver starts fresh)</option>
+            <option value="keep">Keep pending payments (new driver inherits them)</option>
+          </select>
+        </div>
+        <div class="mfg"><label>Reason for change (optional)</label><input id="cd-reason" placeholder="e.g. Driver resigned"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('change-driver-modal')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="confirmChangeDriver()">Change driver</button>
     </div>
   </div>
 </div>
@@ -1393,10 +1544,13 @@ function renderSidebar(){
       <span class="v-nav-name">${v.name}</span>${badge}
     </button>`;
   }).join('');
-  // update alert badge
-  const ac=getAllAlerts().length;
+  // update alert badge — show count of critical alerts
+  const allAlerts=getAllAlerts();
+  const criticalCount=allAlerts.filter(a=>a.sev==='critical').length;
   const badge=document.getElementById('alert-badge');
-  badge.textContent=ac; badge.style.display=ac>0?'':'none';
+  badge.textContent=criticalCount||allAlerts.length;
+  badge.style.display=allAlerts.length>0?'':'none';
+  badge.style.background=criticalCount>0?'var(--red)':'var(--amber)';
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
@@ -1458,11 +1612,26 @@ function renderOverview(){
 }
 
 // ── ALERTS ────────────────────────────────────────────────────
+const SVC_ALERT_META = {
+  engineOil:  {label:'Engine oil',   icon:'🛢️',  intervalKm:5000,  intervalMo:6},
+  gearOil:    {label:'Gear oil',     icon:'⚙️',  intervalKm:20000, intervalMo:24},
+  tuneup:     {label:'Tune-up',      icon:'🔧',  intervalKm:10000, intervalMo:12},
+  airFilter:  {label:'Air filter',   icon:'💨',  intervalKm:15000, intervalMo:12},
+  brakes:     {label:'Brake pads',   icon:'🛑',  intervalKm:30000, intervalMo:null},
+  tires:      {label:'Tyres',        icon:'🔄',  intervalKm:40000, intervalMo:null},
+  battery:    {label:'Battery',      icon:'🔋',  intervalKm:null,  intervalMo:30},
+  clutch:     {label:'Clutch',       icon:'🔩',  intervalKm:60000, intervalMo:null},
+  coolant:    {label:'Coolant',      icon:'🌡️', intervalKm:30000, intervalMo:24},
+  timing:     {label:'Timing belt',  icon:'⏱️', intervalKm:80000, intervalMo:null},
+  sparkPlug:  {label:'Spark plugs',  icon:'⚡',  intervalKm:20000, intervalMo:24},
+  fuelFilter: {label:'Fuel filter',  icon:'⛽',  intervalKm:20000, intervalMo:null},
+};
+
 function getAllAlerts(){
   const alerts=[];
   const cm=curMonth();
   vehicles.forEach(v=>{
-    // overdue payments
+    // ── PAYMENTS ──
     const cp=v.payments.find(p=>p.month===cm);
     if(cp&&cp.paid!=='paid'){
       const fine=calcFine(cp,v);
@@ -1473,41 +1642,102 @@ function getAllAlerts(){
         alerts.push({sev:'warning',type:'payment',title:`${v.name} — payment due in ${diff} day${diff!==1?'s':''}`,desc:`${v.plate} · ${v.driver} · ${fmt(cp.amount)} due on ${ordinal(v.dueDay)}`,vid:v.id,tag:'Due soon'});
       }
     }
-    // upcoming dues in next 7 days
     if(cp&&cp.paid!=='paid'&&getStatus(v)==='active'){
       const diff=daysDiff(todayStr,getDueDate(v.dueDay));
       if(diff<=7){
         alerts.push({sev:'warning',type:'payment',title:`${v.name} — upcoming payment in ${diff} days`,desc:`${v.plate} · ${fmt(cp.amount)}`,vid:v.id,tag:'Due in 7d'});
       }
     }
-    // document expiry
-    const docLabels={revLicense:'Revenue License',insurance:'Insurance',emission:'Emission Test',fitness:'Fitness Certificate',roadPermit:'Road/Route Permit',vat:'Vehicle Auth (VIC/TAX)'};
+
+    // ── DOCUMENTS ──
+    const docLabels={revLicense:'Revenue License',insurance:'Insurance',emission:'Emission Test'};
     Object.entries(v.docs||{}).forEach(([key,exp])=>{
       if(!exp)return;
       const d=daysUntil(exp);
       if(d===null)return;
-      if(d<0){alerts.push({sev:'critical',type:'document',title:`${v.name} — ${docLabels[key]} EXPIRED`,desc:`${v.plate} · Expired ${Math.abs(d)} days ago`,vid:v.id,tag:'Expired'});}
-      else if(d<=30){alerts.push({sev:'warning',type:'document',title:`${v.name} — ${docLabels[key]} expiring soon`,desc:`${v.plate} · Expires in ${d} days (${new Date(exp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})})`,vid:v.id,tag:`${d}d`});}
+      const dateStr=new Date(exp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      if(d<0){
+        alerts.push({sev:'critical',type:'document',title:`${v.name} — ${docLabels[key]} EXPIRED`,desc:`${v.plate} · ${v.driver} · Expired ${Math.abs(d)} day${Math.abs(d)!==1?'s':''} ago`,vid:v.id,tag:'Expired'});
+      } else if(d<=5){
+        alerts.push({sev:'critical',type:'document',title:`${v.name} — ${docLabels[key]} expires in ${d} day${d!==1?'s':''}`,desc:`${v.plate} · ${v.driver} · Expiry: ${dateStr} — renew immediately`,vid:v.id,tag:`${d}d left`});
+      } else if(d<=30){
+        alerts.push({sev:'warning',type:'document',title:`${v.name} — ${docLabels[key]} expiring soon`,desc:`${v.plate} · ${v.driver} · Expires in ${d} days (${dateStr})`,vid:v.id,tag:`${d}d`});
+      }
     });
-    // maintenance — time based
+
+    // ── OLD MAINTENANCE (general service) ──
     if(v.lastServDate&&v.servMonths){
       const nextServ=new Date(v.lastServDate);nextServ.setMonth(nextServ.getMonth()+v.servMonths);
       const d=daysUntil(nextServ.toISOString().split('T')[0]);
       if(d!==null&&d<=30){
-        alerts.push({sev:d<0?'critical':'warning',type:'maintenance',title:`${v.name} — service ${d<0?`overdue by ${Math.abs(d)}d`:`due in ${d}d`}`,desc:`${v.plate} · Last service: ${v.lastServDate}`,vid:v.id,tag:d<0?'Overdue':'Upcoming'});
+        alerts.push({sev:d<0?'critical':'warning',type:'maintenance',title:`${v.name} — general service ${d<0?`overdue by ${Math.abs(d)}d`:`due in ${d}d`}`,desc:`${v.plate} · ${v.driver} · Last service: ${v.lastServDate}`,vid:v.id,tag:d<0?'Overdue':'Upcoming'});
       }
     }
-    // maintenance — km based
     if(v.servKm&&v.lastServOdometer){
       const odoLog=v.odometerLog||[];
       const curOdo=odoLog.length?odoLog[odoLog.length-1].reading:v.lastServOdometer;
       const nextServOdo=v.lastServOdometer+v.servKm;
       const kmLeft=nextServOdo-curOdo;
       if(kmLeft<=500){
-        alerts.push({sev:kmLeft<=0?'critical':'warning',type:'maintenance',title:`${v.name} — service ${kmLeft<=0?`overdue by ${Math.abs(kmLeft).toLocaleString()} km`:`due in ${kmLeft.toLocaleString()} km`}`,desc:`${v.plate} · Current: ${curOdo.toLocaleString()} km · Next service: ${nextServOdo.toLocaleString()} km`,vid:v.id,tag:kmLeft<=0?'Km overdue':'Km due'});
+        alerts.push({sev:kmLeft<=0?'critical':'warning',type:'maintenance',title:`${v.name} — service ${kmLeft<=0?`overdue by ${Math.abs(kmLeft).toLocaleString()} km`:`due in ${kmLeft.toLocaleString()} km`}`,desc:`${v.plate} · Current: ${curOdo.toLocaleString()} km · Next: ${nextServOdo.toLocaleString()} km`,vid:v.id,tag:kmLeft<=0?'Km overdue':'Km due'});
       }
     }
+
+    // ── SERVICES (per-type) ──
+    const svcData = v.services || {};
+    const odoLog  = (v.odometerLog||[]);
+    const curOdo  = odoLog.length ? Math.max(...odoLog.map(e=>e.reading)) : (v.lastServOdometer||null);
+
+    Object.entries(SVC_ALERT_META).forEach(([key, meta]) => {
+      const rec      = svcData[key] || {};
+      const lastOdo  = rec.lastOdo  || null;
+      const iKm      = rec.intervalKm  || meta.intervalKm;
+      const iMo      = rec.intervalMo  || meta.intervalMo;
+      // Reliable date: prefer raw ISO, else parse display string
+      const lastDate = rec.lastDateRaw ? new Date(rec.lastDateRaw)
+                     : rec.lastDate ? (()=>{ const m=(rec.lastDate).match(/(\d+)\s+(\w+)\s+(\d+)/); return m?new Date(`${m[2]} ${m[1]}, ${m[3]}`):null; })()
+                     : null;
+
+      // km-based alert
+      if(iKm && lastOdo && curOdo){
+        const nextOdo  = lastOdo + iKm;
+        const kmLeft   = nextOdo - curOdo;
+        if(kmLeft <= 500){
+          const overdue = kmLeft <= 0;
+          alerts.push({
+            sev: overdue ? 'critical' : 'warning',
+            type: 'service',
+            title: `${v.name} — ${meta.icon} ${meta.label} ${overdue ? `overdue by ${Math.abs(kmLeft).toLocaleString()} km` : `due in ${kmLeft.toLocaleString()} km`}`,
+            desc: `${v.plate} · ${v.driver} · Last done: ${rec.lastDate||'—'} @ ${lastOdo.toLocaleString()} km · Next: ${nextOdo.toLocaleString()} km`,
+            vid: v.id,
+            tag: overdue ? 'Overdue' : `${kmLeft.toLocaleString()} km`
+          });
+        }
+      }
+
+      // date-based alert — warn 30 days out, critical at 5 days
+      if(iMo && lastDate){
+        const nextDate = new Date(lastDate);
+        nextDate.setMonth(nextDate.getMonth() + iMo);
+        const d = Math.round((nextDate - today) / 86400000);
+        const dateStr = nextDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+        if(d < 0){
+          alerts.push({sev:'critical',type:'service',title:`${v.name} — ${meta.icon} ${meta.label} overdue by ${Math.abs(d)} day${Math.abs(d)!==1?'s':''}`,desc:`${v.plate} · ${v.driver} · Was due: ${dateStr}`,vid:v.id,tag:'Overdue'});
+        } else if(d <= 5){
+          alerts.push({sev:'critical',type:'service',title:`${v.name} — ${meta.icon} ${meta.label} due in ${d} day${d!==1?'s':''}`,desc:`${v.plate} · ${v.driver} · Due: ${dateStr} — service needed soon`,vid:v.id,tag:`${d}d left`});
+        } else if(d <= 30){
+          alerts.push({sev:'warning',type:'service',title:`${v.name} — ${meta.icon} ${meta.label} due in ${d} days`,desc:`${v.plate} · ${v.driver} · Due: ${dateStr}`,vid:v.id,tag:`${d}d`});
+        }
+      }
+    });
   });
+
+  // Sort: critical first, then warnings; alphabetically within each group
+  alerts.sort((a,b)=>{
+    const sevOrder={critical:0,warning:1,info:2};
+    return (sevOrder[a.sev]??2)-(sevOrder[b.sev]??2) || a.title.localeCompare(b.title);
+  });
+
   return alerts;
 }
 
@@ -1522,16 +1752,27 @@ function renderAlerts(){
   const all=getAllAlerts();
   const filtered=alertFilter==='all'?all:all.filter(a=>a.type===alertFilter);
   const el=document.getElementById('alerts-list');
+
+  // Update filter button counts
+  const counts={payment:0,document:0,maintenance:0,service:0};
+  all.forEach(a=>{ if(counts[a.type]!==undefined) counts[a.type]++; });
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    const f=btn.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+    if(f&&f!=='all') btn.textContent = {payment:'Payments',document:'Documents',maintenance:'Maintenance',service:'Services'}[f] + (counts[f]?` (${counts[f]})`:'');
+  });
+
   if(!filtered.length){
     el.innerHTML=`<div class="no-alerts"><div class="icon">✅</div><div>${alertFilter==='all'?'No alerts right now. All clear!':'No alerts in this category.'}</div></div>`;return;
   }
+
+  const typeIcon={payment:'💰',document:'📄',maintenance:'🔧',service:'🔩'};
   el.innerHTML=filtered.map(a=>{
     const dotColor=a.sev==='critical'?'var(--red)':a.sev==='warning'?'var(--amber)':'var(--blue)';
     const tagCls=a.sev==='critical'?'tag-red':a.sev==='warning'?'tag-amber':'tag-blue';
-    return `<div class="alert-item sev-${a.sev}" onclick="showVehicle(${a.vid})" style="cursor:pointer;">
+    return `<div class="alert-item sev-${a.sev}" onclick="showVehicle(${a.vid});showTab(${a.vid},'${a.type==='service'?'services':a.type==='document'?'docs':a.type==='maintenance'?'services':'payments'}',document.querySelector('#tab-${a.vid}-${a.type==='service'?'services':a.type==='document'?'docs':a.type==='maintenance'?'services':'payments'}')?.previousElementSibling)" style="cursor:pointer;">
       <div class="alert-dot" style="background:${dotColor}"></div>
       <div class="alert-body">
-        <div class="alert-title">${a.title}<span class="alert-tag ${tagCls}">${a.tag}</span></div>
+        <div class="alert-title">${typeIcon[a.type]||''} ${a.title}<span class="alert-tag ${tagCls}">${a.tag}</span></div>
         <div class="alert-desc">${a.desc}</div>
       </div>
     </div>`;
@@ -1830,22 +2071,19 @@ function buildVehiclePage(v){
       <div class="note-body">${n.text}</div>
     </div>`).join('');
 
-  // maintenance
-  let maintHtml='—';
-  if(v.servKm||v.servMonths){
-    const nextServDate=v.lastServDate?new Date(v.lastServDate):null;
-    if(nextServDate&&v.servMonths)nextServDate.setMonth(nextServDate.getMonth()+v.servMonths);
-    const nextOdo=v.lastServOdometer&&v.servKm?v.lastServOdometer+v.servKm:null;
-    maintHtml=`<table class="info-table">
-      <tr><td>Last service</td><td>${v.lastServDate||'—'} @ ${v.lastServOdometer?v.lastServOdometer.toLocaleString()+' km':'—'}</td></tr>
-      <tr><td>Next service due</td><td>${nextServDate?nextServDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</td></tr>
-      <tr><td>Next service odo</td><td>${nextOdo?nextOdo.toLocaleString()+' km':'—'}</td></tr>
-      <tr><td>Service interval</td><td>${v.servKm?v.servKm.toLocaleString()+' km':'—'} / ${v.servMonths?v.servMonths+' months':'—'}</td></tr>
-    </table>
-    <div style="margin-top:12px;">
-      <button type="button" class="btn btn-primary btn-sm" onclick="openMarkServiceDone(${v.id})">✓ Mark service done &amp; reset odometer</button>
-    </div>`;
-  }
+  // maintenance — always show, even if no interval configured yet
+  const nextServDate=v.lastServDate?new Date(v.lastServDate):null;
+  if(nextServDate&&v.servMonths)nextServDate.setMonth(nextServDate.getMonth()+v.servMonths);
+  const nextOdo=v.lastServOdometer&&v.servKm?v.lastServOdometer+v.servKm:null;
+  const maintHtml=`<table class="info-table">
+    <tr><td>Last service</td><td>${v.lastServDate||'—'} @ ${v.lastServOdometer?v.lastServOdometer.toLocaleString()+' km':'—'}</td></tr>
+    <tr><td>Next service due</td><td>${nextServDate&&v.servMonths?nextServDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</td></tr>
+    <tr><td>Next service odo</td><td>${nextOdo?nextOdo.toLocaleString()+' km':'—'}</td></tr>
+    <tr><td>Service interval</td><td>${v.servKm?v.servKm.toLocaleString()+' km':'—'} / ${v.servMonths?v.servMonths+' months':'—'}</td></tr>
+  </table>
+  <div style="margin-top:12px;">
+    <button type="button" class="btn btn-primary btn-sm" onclick="openMarkServiceDone(${v.id})">✓ Mark service done &amp; reset odometer</button>
+  </div>`;
 
   // odometer
   const odoLog = (v.odometerLog||[]).slice().sort((a,b)=>a.id-b.id);
@@ -1853,10 +2091,12 @@ function buildVehiclePage(v){
   const odoByDate = odoLog.slice().sort((a,b)=>parseOdoDateFn(a.date)-parseOdoDateFn(b.date));
   const currentOdo = odoByDate.length ? odoByDate[odoByDate.length-1].reading : (v.lastServOdometer||null);
   const firstOdo = odoByDate.length ? odoByDate[0].reading : null;
-  const totalDriven = (currentOdo&&firstOdo) ? currentOdo - firstOdo : null;
+  const totalDriven = (currentOdo&&firstOdo&&currentOdo!==firstOdo) ? currentOdo - firstOdo : null;
   const nextServOdo = v.lastServOdometer&&v.servKm ? v.lastServOdometer+v.servKm : null;
-  const kmToServ = (nextServOdo&&currentOdo) ? nextServOdo - currentOdo : null;
-  const servPct = (nextServOdo&&v.lastServOdometer&&v.servKm) ? Math.min(100,Math.round(((currentOdo||v.lastServOdometer)-v.lastServOdometer)/v.servKm*100)) : 0;
+  // Use currentOdo if available, else fall back to lastServOdometer as best known reading
+  const bestOdo = currentOdo || v.lastServOdometer || null;
+  const kmToServ = (nextServOdo&&bestOdo) ? nextServOdo - bestOdo : null;
+  const servPct = (nextServOdo&&v.lastServOdometer&&v.servKm) ? Math.min(100,Math.round(((bestOdo||v.lastServOdometer)-v.lastServOdometer)/v.servKm*100)) : 0;
   const servColor = servPct>=90?'var(--red)':servPct>=70?'var(--amber)':'var(--teal)';
   // Sort by date for display (newest first), but compute delta against chronological order
   const parseOdoDate = s => { if(!s) return 0; const m = s.match(/(\d+)\s+(\w+)\s+(\d+)/); if(!m) return 0; return new Date(`${m[2]} ${m[1]}, ${m[3]}`).getTime()||0; };
@@ -1884,12 +2124,14 @@ function buildVehiclePage(v){
       <div class="vp-top">
         <div class="vp-left">
           ${v.photo
-            ? `<div class="vp-photo-wrap" onclick="openVehiclePhotoLightbox('${v.id}')">
+            ? `<div class="vp-photo-wrap" onclick="triggerVehiclePhotoEdit(${v.id})" title="Change photo">
                 <img src="${v.photo}" alt="${v.name}"/>
-               </div>
-               <label class="vp-photo-edit-btn" onclick="triggerVehiclePhotoEdit(${v.id})">📷 Change photo</label>`
-            : `<div class="vp-type-icon" style="background:${typeBg[v.type]}">${typeEmoji[v.type]||'🚗'}</div>
-               <label class="vp-photo-edit-btn" onclick="triggerVehiclePhotoEdit(${v.id})">📷 Add photo</label>`
+                <div class="vp-photo-overlay">📷</div>
+               </div>`
+            : `<div class="vp-type-icon vp-photo-wrap" style="background:${typeBg[v.type]};width:70px;height:70px;border-radius:12px;font-size:22px;" onclick="triggerVehiclePhotoEdit(${v.id})" title="Add photo">
+                <span>${typeEmoji[v.type]||'🚗'}</span>
+                <div class="vp-photo-overlay" style="font-size:14px;">📷 Add</div>
+               </div>`
           }
           <div>
             <div style="display:flex;align-items:center;gap:10px;">
@@ -1900,6 +2142,7 @@ function buildVehiclePage(v){
           </div>
         </div>
         <div class="vp-actions">
+          <button type="button" class="change-driver-btn" onclick="openChangeDriver(${v.id})">🔄 Change driver</button>
           <button type="button" class="btn btn-ghost" onclick="deleteVehicle(${v.id})">Remove</button>
         </div>
       </div>
@@ -1909,6 +2152,7 @@ function buildVehiclePage(v){
         <button type="button" class="itab" onclick="showTab(${v.id},'dues',this)">Due dates</button>
         <button type="button" class="itab" onclick="showTab(${v.id},'deposits',this)">Deposit</button>
         <button type="button" class="itab" onclick="showTab(${v.id},'expenses',this)">Expenses</button>
+        <button type="button" class="itab" onclick="showTab(${v.id},'services',this)">Services</button>
         <button type="button" class="itab" onclick="showTab(${v.id},'handover',this)">Handover</button>
         <button type="button" class="itab" onclick="showTab(${v.id},'odometer',this)">Odometer</button>
         <button type="button" class="itab" onclick="showTab(${v.id},'docs',this)">Documents</button>
@@ -1929,10 +2173,10 @@ function buildVehiclePage(v){
           <div class="mini-kpi"><div class="mk-label">Owner expenses</div><div class="mk-val r">${fmt(totalExpenses)}</div></div>
           <div class="mini-kpi"><div class="mk-label">Net profit</div><div class="mk-val ${profitBal>=0?'g':'r'}">${fmt(profitBal)}</div></div>
         </div>
-        ${currentOdo?`<div class="mini-kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:-14px;">
+        ${(bestOdo||nextServOdo)?`<div class="mini-kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:-14px;">
           <div class="mini-kpi" style="border-color:rgba(29,158,117,0.25)">
             <div class="mk-label">Current odometer</div>
-            <div class="mk-val" style="font-size:18px">${currentOdo.toLocaleString()} <span style="font-size:12px;font-weight:400;color:var(--txt3)">km</span></div>
+            <div class="mk-val" style="font-size:18px">${bestOdo?bestOdo.toLocaleString():'—'} <span style="font-size:12px;font-weight:400;color:var(--txt3)">km</span></div>
           </div>
           <div class="mini-kpi">
             <div class="mk-label">Total driven (rental)</div>
@@ -1959,17 +2203,19 @@ function buildVehiclePage(v){
           <div class="info-card"><h4>Driver details</h4>
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
               <div class="avatar" style="width:44px;height:44px;font-size:15px;background:${avBg[ci]};color:${avFg[ci]}">${initials(v.driver)}</div>
-              <div>
+              <div style="flex:1;">
                 <div style="font-size:15px;font-weight:500;color:var(--txt)">${v.driver}</div>
                 <div style="font-size:12px;color:var(--txt3);margin-top:2px;">${v.phone}</div>
               </div>
+              <button type="button" class="change-driver-btn" onclick="openChangeDriver(${v.id})">🔄 Change</button>
             </div>
             <table class="info-table">
               <tr><td>NIC</td><td style="font-family:var(--font-mono)">${v.nic||'—'}</td></tr>
               <tr><td>License no.</td><td style="font-family:var(--font-mono)">${v.license||'—'}</td></tr>
               <tr><td>Address</td><td>${v.address||'—'}</td></tr>
               <tr><td>Emergency</td><td>${v.emergName||'—'} (${v.emergPhone||'—'})</td></tr>
-              <tr><td>Since</td><td>${new Date(v.startDate).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td></tr>
+              <tr><td>Driving since</td><td>${new Date(v.startDate).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td></tr>
+              ${v.driverHistory&&v.driverHistory.length?`<tr><td>Previous drivers</td><td style="color:var(--txt3)">${v.driverHistory.length} on record</td></tr>`:''}
             </table>
           </div>
         </div>
@@ -2017,6 +2263,31 @@ function buildVehiclePage(v){
                   <td style="color:var(--txt3);">${h.reason||'—'}<span style="margin-left:6px;font-size:11px;">${h.changedOn||''}</span></td>
                 </tr>`;
               }).join('')}
+            </tbody>
+          </table>
+        </div>`:''}
+        ${(v.driverHistory&&v.driverHistory.length)?`
+        <div class="driver-history-section" style="margin-top:16px;">
+          <h4>🧑‍✈️ Driver history</h4>
+          <table class="driver-history-table">
+            <thead><tr><th>Driver</th><th>Contact / NIC</th><th>From</th><th>Until</th><th>Deposit</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="dh-name">${v.driver}</div><div class="dh-meta">${v.phone||'—'}</div></td>
+                <td><div style="font-size:12px;font-family:var(--font-mono);color:var(--txt3)">${v.nic||'—'}</div></td>
+                <td style="color:var(--txt3);font-size:12px;">${new Date(v.startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+                <td><span class="dh-current-tag">Current</span></td>
+                <td style="color:var(--txt3);font-size:12px;">${v.deposit&&v.deposit.amount?fmt(v.deposit.amount):'—'}</td>
+                <td style="color:var(--txt3);font-size:12px;">—</td>
+              </tr>
+              ${v.driverHistory.slice().reverse().map(h=>`<tr>
+                <td><div class="dh-name" style="color:var(--txt2);">${h.name}</div><div class="dh-meta">${h.phone||'—'}</div></td>
+                <td><div style="font-size:12px;font-family:var(--font-mono);color:var(--txt3)">${h.nic||'—'}</div></td>
+                <td style="color:var(--txt3);font-size:12px;">${h.from||'—'}</td>
+                <td style="color:var(--txt3);font-size:12px;">${h.until||'—'}<span class="dh-past-tag" style="margin-left:6px;">Past</span></td>
+                <td style="color:var(--txt3);font-size:12px;">${h.depositAmount?fmt(h.depositAmount):'—'}${h.depositStatus?` <span style="font-size:10px;color:var(--txt3)">(${h.depositStatus})</span>`:''}</td>
+                <td style="color:var(--txt3);font-size:12px;">${h.changeReason||'—'}</td>
+              </tr>`).join('')}
             </tbody>
           </table>
         </div>`:''}
@@ -2114,6 +2385,153 @@ function buildVehiclePage(v){
         })()}
       </div>
 
+      <!-- SERVICES TAB -->
+      <div class="itab-content" id="tab-${v.id}-services">
+        ${(()=>{
+          const svcTypes = [
+            {key:'engineOil', label:'Engine oil',    icon:'🛢️',  intervalKm:5000,  intervalMo:6},
+            {key:'gearOil',   label:'Gear oil',      icon:'⚙️',  intervalKm:20000, intervalMo:24},
+            {key:'tuneup',    label:'Tune-up',       icon:'🔧',  intervalKm:10000, intervalMo:12},
+            {key:'airFilter', label:'Air filter',    icon:'💨',  intervalKm:15000, intervalMo:12},
+            {key:'brakes',    label:'Brake pads',    icon:'🛑',  intervalKm:30000, intervalMo:null},
+            {key:'tires',     label:'Tyres',         icon:'🔄',  intervalKm:40000, intervalMo:null},
+            {key:'battery',   label:'Battery',       icon:'🔋',  intervalKm:null,  intervalMo:30},
+            {key:'clutch',    label:'Clutch',        icon:'🔩',  intervalKm:60000, intervalMo:null},
+            {key:'coolant',   label:'Coolant',       icon:'🌡️', intervalKm:30000, intervalMo:24},
+            {key:'timing',    label:'Timing belt',   icon:'⏱️', intervalKm:80000, intervalMo:null},
+            {key:'sparkPlug', label:'Spark plugs',   icon:'⚡',  intervalKm:20000, intervalMo:24},
+            {key:'fuelFilter',label:'Fuel filter',   icon:'⛽',  intervalKm:20000, intervalMo:null},
+          ];
+          const svcData = v.services || {};
+
+          // Build service cards
+          const cards = svcTypes.map(t => {
+            const rec      = svcData[t.key] || {};
+            const lastOdo  = rec.lastOdo  || null;
+            // Use raw ISO date if available (reliable), else try to parse display date
+            const lastDateRaw = rec.lastDateRaw || null;
+            const lastDateDisp = rec.lastDate || null;
+            const lastDate = lastDateRaw ? new Date(lastDateRaw)
+                           : lastDateDisp ? (()=>{ const m=lastDateDisp.match(/(\d+)\s+(\w+)\s+(\d+)/); return m?new Date(`${m[2]} ${m[1]}, ${m[3]}`):null; })()
+                           : null;
+            const iKm  = rec.intervalKm  || t.intervalKm;
+            const iMo  = rec.intervalMo  || t.intervalMo;
+
+            let statusCls = 'svc-unknown', statusTxt = 'Not recorded';
+            let pct = 0, remaining = null, nextOdoStr = '—', nextDateStr = '—';
+
+            if (lastOdo && iKm && bestOdo) {
+              remaining = (lastOdo + iKm) - bestOdo;
+              pct = Math.min(100, Math.max(0, Math.round(((bestOdo - lastOdo) / iKm) * 100)));
+              nextOdoStr = (lastOdo + iKm).toLocaleString() + ' km';
+              if      (remaining <= 0)    { statusCls = 'svc-overdue'; statusTxt = 'Overdue'; }
+              else if (remaining <= 500)  { statusCls = 'svc-due';     statusTxt = `Due in ${remaining.toLocaleString()} km`; }
+              else                        { statusCls = 'svc-ok';      statusTxt = `${remaining.toLocaleString()} km left`; }
+            }
+            if (lastDate && iMo) {
+              const nd = new Date(lastDate); nd.setMonth(nd.getMonth() + iMo);
+              const daysLeft = Math.round((nd - today) / 86400000);
+              nextDateStr = nd.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+              const datePct = Math.min(100, Math.max(0, Math.round(((today - lastDate) / (nd - lastDate)) * 100)));
+              // Only override status/pct from date if we don't have km-based status, or date is worse
+              if (!lastOdo || !iKm || !bestOdo) {
+                pct = datePct;
+                if      (daysLeft <= 0)   { statusCls = 'svc-overdue'; statusTxt = 'Overdue'; }
+                else if (daysLeft <= 30)  { statusCls = 'svc-due';     statusTxt = `Due in ${daysLeft}d`; }
+                else                      { statusCls = 'svc-ok';      statusTxt = `${daysLeft}d left`; }
+              }
+            }
+            if (statusCls === 'svc-unknown' && (lastOdo || lastDateDisp)) {
+              statusCls = 'svc-ok'; statusTxt = 'Recorded';
+            }
+
+            const fillColor = statusCls==='svc-overdue'?'var(--red)':statusCls==='svc-due'?'var(--amber)':'var(--teal-glow)';
+
+            return `<div class="svc-card">
+              <div class="svc-card-head">
+                <div class="svc-name"><span class="svc-icon">${t.icon}</span>${t.label}</div>
+                <span class="svc-status ${statusCls}">${statusTxt}</span>
+              </div>
+              <div class="svc-meta">Last done: <strong>${lastDateDisp||'—'}</strong>${lastOdo?` @ <strong>${lastOdo.toLocaleString()} km</strong>`:''}</div>
+              <div class="svc-meta">Next: <strong>${nextOdoStr!=='—'?nextOdoStr:nextDateStr}</strong>${nextOdoStr!=='—'&&nextDateStr!=='—'?` · ${nextDateStr}`:''}</div>
+              ${(lastOdo||lastDateDisp)?`<div class="svc-progress-track"><div class="svc-progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+              <div class="svc-progress-label"><span>${t.icon} Done</span><span>${pct}% of interval</span></div>`:''}
+              <div style="margin-top:12px;">
+                <button type="button" class="svc-update-btn" onclick="openSvcUpdate(${v.id},'${t.key}','${t.label}')">✏ Update</button>
+              </div>
+            </div>`;
+          }).join('');
+
+          // Build service log (all entries across all types, newest first)
+          const allLogs = [];
+          svcTypes.forEach(t => {
+            const hist = (svcData[t.key]||{}).history || [];
+            hist.forEach(h => allLogs.push({...h, type: t.label, icon: t.icon, key: t.key}));
+          });
+          allLogs.sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+          const svcColors = {engineOil:'rgba(239,159,39,.18)',gearOil:'rgba(55,138,221,.15)',tuneup:'rgba(139,111,212,.18)',airFilter:'rgba(29,158,117,.15)',brakes:'rgba(226,75,74,.15)',tires:'rgba(55,138,221,.15)',battery:'rgba(239,159,39,.18)',clutch:'rgba(139,111,212,.18)',coolant:'rgba(29,158,117,.15)',timing:'rgba(226,75,74,.15)',sparkPlug:'rgba(239,159,39,.18)',fuelFilter:'rgba(29,158,117,.15)'};
+          const svcFg    = {engineOil:'var(--amber)',gearOil:'var(--blue)',tuneup:'var(--purple)',airFilter:'var(--teal-glow)',brakes:'var(--red)',tires:'var(--blue)',battery:'var(--amber)',clutch:'var(--purple)',coolant:'var(--teal-glow)',timing:'var(--red)',sparkPlug:'var(--amber)',fuelFilter:'var(--teal-glow)'};
+
+          const logRows = allLogs.map(h=>`<tr>
+            <td style="color:var(--txt3);font-size:12px;">${new Date(h.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+            <td><span class="svc-type-badge" style="background:${svcColors[h.key]||'var(--bg4)'};color:${svcFg[h.key]||'var(--txt3)'}">${h.icon} ${h.type}</span></td>
+            <td style="font-family:var(--font-mono);font-size:13px;">${h.odo?h.odo.toLocaleString()+' km':'—'}</td>
+            <td style="color:var(--txt3);font-size:12px;">${h.cost?'LKR '+h.cost.toLocaleString():'—'}</td>
+            <td style="color:var(--txt3);font-size:12px;">${h.shop||'—'}</td>
+            <td style="color:var(--txt3);font-size:12px;">${h.notes||'—'}</td>
+            <td><button type="button" onclick="deleteSvcLog(${v.id},'${h.key}','${h.date}',${h.odo||0})" style="font-size:10px;padding:2px 7px;border-radius:5px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.25);color:var(--red);cursor:pointer;font-family:var(--font-body);">✕</button></td>
+          </tr>`).join('');
+
+          // Build "Other" custom service cards
+          const otherKeys = Object.keys(svcData).filter(k => k.startsWith('other_'));
+          const otherCards = otherKeys.map(k => {
+            const rec = svcData[k];
+            const lastDateDisp = rec.lastDate || null;
+            const lastOdo = rec.lastOdo || null;
+            return `<div class="svc-card" style="border-color:rgba(139,111,212,0.25);">
+              <div class="svc-card-head">
+                <div class="svc-name"><span class="svc-icon">🔩</span>${rec.label||k}</div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="svc-status ${lastDateDisp?'svc-ok':'svc-unknown'}">${lastDateDisp?'Recorded':'Not recorded'}</span>
+                  <button type="button" onclick="deleteOtherSvc(${v.id},'${k}')" style="font-size:10px;padding:2px 7px;border-radius:5px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.25);color:var(--red);cursor:pointer;font-family:var(--font-body);">✕</button>
+                </div>
+              </div>
+              <div class="svc-meta">Last done: <strong>${lastDateDisp||'—'}</strong>${lastOdo?` @ <strong>${lastOdo.toLocaleString()} km</strong>`:''}</div>
+              <div style="margin-top:12px;">
+                <button type="button" class="svc-update-btn" onclick="openSvcUpdate(${v.id},'${k}','${(rec.label||k).replace(/'/g,"\\'")}')">✏ Update</button>
+              </div>
+            </div>`;
+          }).join('');
+
+          // Include other entries in the log
+          otherKeys.forEach(k => {
+            const hist = (svcData[k]||{}).history || [];
+            const lbl = svcData[k]?.label || k;
+            hist.forEach(h => allLogs.push({...h, type: lbl, icon: '🔩', key: k}));
+          });
+          allLogs.sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+          return `
+          <div class="svc-grid">${cards}</div>
+          ${otherCards ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:4px;">
+            <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;">Other / Custom parts</div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="openAddOtherSvc(${v.id})">+ Add other</button>
+          </div>
+          <div class="svc-grid">${otherCards}</div>` :
+          `<div style="display:flex;justify-content:flex-end;margin-bottom:16px;margin-top:-8px;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="openAddOtherSvc(${v.id})">+ Add other part / service</button>
+          </div>`}
+          <div class="svc-log-section">
+            <h4>🗒 Full service log <span style="font-weight:400;font-size:11px;">${allLogs.length} records</span></h4>
+            <table class="svc-log-table">
+              <thead><tr><th>Date</th><th>Service type</th><th>Odometer</th><th>Cost</th><th>Shop / garage</th><th>Notes</th><th></th></tr></thead>
+              <tbody>${logRows||`<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:24px">No service records yet. Update any service card above to get started.</td></tr>`}</tbody>
+            </table>
+          </div>`;
+        })()}
+      </div>
+
       <!-- HANDOVER TAB -->
       <div class="itab-content" id="tab-${v.id}-handover">
         <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
@@ -2144,7 +2562,7 @@ function buildVehiclePage(v){
             </div>
             <div class="odo-stat">
               <div class="odo-stat-label">Next service @ km</div>
-              <div class="odo-stat-val ${kmToServ!==null&&kmToServ<=500?'r':kmToServ!==null&&kmToServ<=1500?'a':'g'}">${nextServOdo?nextServOdo.toLocaleString()+' km':'—'}</div>
+              <div class="odo-stat-val ${kmToServ!==null&&kmToServ<=500?'r':kmToServ!==null&&kmToServ<=1500?'a':'g'}">${nextServOdo?nextServOdo.toLocaleString()+' km':v.lastServOdometer&&!v.servKm?`<span style="font-size:11px;color:var(--txt3)">No interval set</span>`:'—'}</div>
             </div>
           </div>
           ${v.servKm&&v.lastServOdometer?`
@@ -2368,19 +2786,21 @@ function confirmManualPayment(){
   const status=document.getElementById('mp-status').value;
   const note=document.getElementById('mp-note').value.trim();
   if(!month||!amount){alert('Please fill in month label and amount.');return;}
+  // Enforce paidAmount=0 for pending/overdue
+  const finalPaidAmount = (status==='pending'||status==='overdue') ? 0 : paidamount;
   // Check if this month already exists
   const existing=v.payments.find(p=>p.month===month);
   if(existing){
     if(!confirm(`A payment record for "${month}" already exists. Overwrite it?`))return;
     existing.amount=amount;
     existing.paid=status;
-    existing.paidAmount=paidamount;
+    existing.paidAmount=finalPaidAmount;
     existing.dueDate=duedate?new Date(duedate).toLocaleDateString('en-GB'):'';
     existing.paidDate=paiddate?new Date(paiddate).toLocaleDateString('en-GB'):'';
     if(note)existing.note=note;
   } else {
     v.payments.push({
-      month,amount,paid:status,paidAmount:paidamount,
+      month,amount,paid:status,paidAmount:finalPaidAmount,
       dueDate:duedate?new Date(duedate).toLocaleDateString('en-GB'):'',
       paidDate:paiddate?new Date(paiddate).toLocaleDateString('en-GB'):'',
       note:note||null,manual:true
@@ -2557,7 +2977,7 @@ function openAddModal(){
   document.getElementById('f-start').value=todayStr;
   document.getElementById('f-dueday').value='5';
   document.getElementById('f-payment-date').value=todayStr;
-  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-address','f-deposit','f-doc-rl','f-doc-ins','f-doc-emi','f-doc-fit','f-doc-rp','f-doc-vat','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
+  ['f-name','f-plate','f-year','f-rent','f-driver','f-phone','f-nic','f-license','f-emerg-name','f-emerg-phone','f-address','f-deposit','f-doc-rl','f-doc-ins','f-ins-type','f-doc-emi','f-init-odo','f-serv-km','f-serv-mo','f-notes','f-existing-driver'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   updateDueMonthOptions(); // populate due month dropdown
@@ -2603,10 +3023,8 @@ function addVehicle(){
   const isPersonal=document.getElementById('f-personal')?.checked||false;
   const docRL=document.getElementById('f-doc-rl').value;
   const docIns=document.getElementById('f-doc-ins').value;
+  const docInsType=document.getElementById('f-ins-type').value;
   const docEmi=document.getElementById('f-doc-emi').value;
-  const docFit=document.getElementById('f-doc-fit').value;
-  const docRP=document.getElementById('f-doc-rp').value;
-  const docVAT=document.getElementById('f-doc-vat').value;
   const servKm=parseInt(document.getElementById('f-serv-km').value)||null;
   const servMonths=parseInt(document.getElementById('f-serv-mo').value)||null;
   const initOdo=parseInt(document.getElementById('f-init-odo').value)||0;
@@ -2615,7 +3033,7 @@ function addVehicle(){
   const startOdoLog=initOdo?[{id:Date.now(),date:new Date(startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),reading:initOdo,note:'Initial reading'}]:[];
   const v={id:nid++,name,plate,type,year,feeType:feeTypeSel,rent:rent||0,driver:driver||'(Personal)',phone,nic,license,emergName,emergPhone,address,startDate,dueDay,notes,personal:isPersonal,
     deposit:{amount:depositAmt,status:'held',date:today.toLocaleDateString('en-GB')},
-    docs:{revLicense:docRL,insurance:docIns,emission:docEmi,fitness:docFit,roadPermit:docRP,vat:docVAT},
+    docs:{revLicense:docRL,insurance:docIns,insuranceType:docInsType,emission:docEmi},
     servKm,servMonths,lastServDate:null,lastServOdometer:initOdo||null,
     odometerLog:startOdoLog,
     expenses:[],handovers:[],noteEntries:[],payments:[]};
@@ -2649,6 +3067,279 @@ function fillDriverFromSelect(idx){
   document.getElementById('f-emerg-name').value=d.emergName||'';
   document.getElementById('f-emerg-phone').value=d.emergPhone||'';
   document.getElementById('f-address').value=d.address||'';
+}
+
+// ── SERVICES ──────────────────────────────────────────────────
+const SVC_DEFAULTS = {
+  engineOil:  {intervalKm:5000,  intervalMo:6},
+  gearOil:    {intervalKm:20000, intervalMo:24},
+  tuneup:     {intervalKm:10000, intervalMo:12},
+  airFilter:  {intervalKm:15000, intervalMo:12},
+  brakes:     {intervalKm:30000, intervalMo:null},
+  tires:      {intervalKm:40000, intervalMo:null},
+  battery:    {intervalKm:null,  intervalMo:30},
+  clutch:     {intervalKm:60000, intervalMo:null},
+  coolant:    {intervalKm:30000, intervalMo:24},
+  timing:     {intervalKm:80000, intervalMo:null},
+  sparkPlug:  {intervalKm:20000, intervalMo:24},
+  fuelFilter: {intervalKm:20000, intervalMo:null},
+};
+
+let svcUpdateCtx = null;
+function openSvcUpdate(vid, key, label) {
+  const v = vehicles.find(x => x.id === vid);
+  svcUpdateCtx = { vid, key };
+  document.getElementById('svc-modal-title').textContent = 'Update — ' + label;
+  document.getElementById('svc-date').value = todayStr;
+  // Pre-fill odometer: use highest logged reading, else lastServOdometer
+  const odoLog = v.odometerLog || [];
+  const bestOdo = odoLog.length ? Math.max(...odoLog.map(e => e.reading)) : (v.lastServOdometer || '');
+  document.getElementById('svc-odo').value = bestOdo || '';
+  document.getElementById('svc-odo').placeholder = bestOdo ? 'Current: ' + Number(bestOdo).toLocaleString() + ' km' : 'e.g. 48500';
+  // Pre-fill interval overrides if already saved
+  const rec = (v.services||{})[key] || {};
+  document.getElementById('svc-interval-km').value = rec.intervalKm || SVC_DEFAULTS[key]?.intervalKm || '';
+  document.getElementById('svc-interval-mo').value = rec.intervalMo || SVC_DEFAULTS[key]?.intervalMo || '';
+  document.getElementById('svc-cost').value = '';
+  document.getElementById('svc-shop').value = '';
+  document.getElementById('svc-notes').value = '';
+  openModal('svc-update-modal');
+}
+
+function confirmSvcUpdate() {
+  if (!svcUpdateCtx) return;
+  const { vid, key } = svcUpdateCtx;
+  const v = vehicles.find(x => x.id === vid);
+  const dateVal = document.getElementById('svc-date').value;  // yyyy-mm-dd
+  const odo     = parseInt(document.getElementById('svc-odo').value) || null;
+  const iKm     = parseInt(document.getElementById('svc-interval-km').value) || null;
+  const iMo     = parseInt(document.getElementById('svc-interval-mo').value) || null;
+  const cost    = parseInt(document.getElementById('svc-cost').value) || null;
+  const shop    = document.getElementById('svc-shop').value.trim();
+  const notes   = document.getElementById('svc-notes').value.trim();
+
+  if (!dateVal) { alert('Please enter the date the service was done.'); return; }
+
+  if (!v.services) v.services = {};
+  if (!v.services[key]) v.services[key] = { history: [] };
+
+  const rec = v.services[key];
+  const displayDate = new Date(dateVal).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+
+  // Update last-done — store BOTH raw ISO (for reliable parsing) and display
+  rec.lastDate    = displayDate;
+  rec.lastDateRaw = dateVal;       // yyyy-mm-dd — used for date arithmetic
+  if (odo) rec.lastOdo = odo;
+  if (iKm) rec.intervalKm = iKm;
+  if (iMo) rec.intervalMo = iMo;
+
+  // Append to history
+  if (!rec.history) rec.history = [];
+  rec.history.push({ date: dateVal, odo, cost, shop: shop||null, notes: notes||null });
+
+  // Also push odometer reading to odometerLog if odo was entered
+  if (odo) {
+    if (!v.odometerLog) v.odometerLog = [];
+    const label = `🔧 ${key.replace(/([A-Z])/g,' $1').trim()} service`;
+    // Avoid duplicating if same odo+date already exists
+    const exists = v.odometerLog.some(e => e.reading === odo && e.date === displayDate);
+    if (!exists) v.odometerLog.push({ id: Date.now(), date: displayDate, reading: odo, note: label });
+  }
+
+  closeModal('svc-update-modal');
+  svcUpdateCtx = null;
+  refreshVehicle(v.id);
+}
+
+// ── OTHER / CUSTOM SERVICE ────────────────────────────────────
+let addOtherSvcCtx = null;
+function openAddOtherSvc(vid) {
+  addOtherSvcCtx = { vid };
+  document.getElementById('other-svc-name').value = '';
+  openModal('add-other-svc-modal');
+}
+function confirmAddOtherSvc() {
+  if (!addOtherSvcCtx) return;
+  const label = document.getElementById('other-svc-name').value.trim();
+  if (!label) { alert('Please enter a part / service name.'); return; }
+  const v = vehicles.find(x => x.id === addOtherSvcCtx.vid);
+  if (!v.services) v.services = {};
+  // Create a unique key for this custom entry
+  const key = 'other_' + Date.now();
+  v.services[key] = { label, history: [] };
+  closeModal('add-other-svc-modal');
+  addOtherSvcCtx = null;
+  refreshVehicle(v.id);
+  window._db.saveVehicle(v);
+  // Auto-open the update modal so user can log the first entry right away
+  setTimeout(() => openSvcUpdate(v.id, key, label), 200);
+}
+function deleteOtherSvc(vid, key) {
+  if (!confirm('Remove this custom service entry and all its records?')) return;
+  const v = vehicles.find(x => x.id === vid);
+  if (v.services) delete v.services[key];
+  refreshVehicle(vid);
+  window._db.saveVehicle(v);
+}
+
+function deleteSvcLog(vid, key, date, odo) {
+  if (!confirm('Remove this service record?')) return;
+  const v = vehicles.find(x => x.id === vid);
+  if (!v.services || !v.services[key]) return;
+  const rec = v.services[key];
+  rec.history = (rec.history || []).filter(h => !(h.date === date && (h.odo||0) === odo));
+
+  // Also remove matching odometerLog entry that was auto-added by this service
+  if (odo && v.odometerLog) {
+    const displayDate = new Date(date).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+    v.odometerLog = v.odometerLog.filter(e => !(e.reading === odo && e.date === displayDate && (e.note||'').includes('service')));
+  }
+
+  // Reset lastDate/lastOdo to most recent remaining history entry
+  if (rec.history.length === 0) {
+    rec.lastDate = null; rec.lastDateRaw = null; rec.lastOdo = null;
+  } else {
+    const latest = rec.history.slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+    rec.lastDate    = new Date(latest.date).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+    rec.lastDateRaw = latest.date;
+    rec.lastOdo     = latest.odo || null;
+  }
+  refreshVehicle(v.id);
+}
+
+// ── CHANGE DRIVER ─────────────────────────────────────────────
+let changeDriverCtx = null;
+function openChangeDriver(vid) {
+  const v = vehicles.find(x => x.id === vid);
+  changeDriverCtx = { vid };
+
+  // Show current driver summary
+  document.getElementById('cd-current-summary').innerHTML =
+    `<strong>Current driver:</strong> ${v.driver} &nbsp;·&nbsp; ${v.phone||'—'} &nbsp;·&nbsp; NIC: ${v.nic||'—'}<br>
+     <span style="font-size:11px;color:var(--txt3);">Renting since ${new Date(v.startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} &nbsp;·&nbsp; Deposit: ${v.deposit&&v.deposit.amount?fmt(v.deposit.amount):'—'} (${v.deposit&&v.deposit.status||'—'})</span>`;
+
+  // Reset fields
+  ['cd-driver','cd-phone','cd-nic','cd-license','cd-emerg-name','cd-emerg-phone','cd-address','cd-reason','cd-deposit'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('cd-start').value = todayStr;
+  document.getElementById('cd-payments-action').value = 'clear';
+
+  // Populate existing drivers dropdown
+  const sel = document.getElementById('cd-existing-driver');
+  const allDrivers = getAllDrivers();
+  sel.innerHTML = '<option value="">— Type manually or pick existing —</option>' +
+    allDrivers.map((d,i) => `<option value="${i}">${d.name}${d.phone?' · '+d.phone:''}${d.nic?' · '+d.nic:''}</option>`).join('');
+
+  openModal('change-driver-modal');
+}
+
+function fillCDFromSelect(idx) {
+  if (idx === '') return;
+  const d = getAllDrivers()[parseInt(idx)];
+  if (!d) return;
+  document.getElementById('cd-driver').value = d.name || '';
+  document.getElementById('cd-phone').value = d.phone || '';
+  document.getElementById('cd-nic').value = d.nic || '';
+  document.getElementById('cd-license').value = d.license || '';
+  document.getElementById('cd-emerg-name').value = d.emergName || '';
+  document.getElementById('cd-emerg-phone').value = d.emergPhone || '';
+  document.getElementById('cd-address').value = d.address || '';
+}
+
+function confirmChangeDriver() {
+  if (!changeDriverCtx) return;
+  const v = vehicles.find(x => x.id === changeDriverCtx.vid);
+  const newName    = document.getElementById('cd-driver').value.trim();
+  const newPhone   = document.getElementById('cd-phone').value.trim();
+  const newNic     = document.getElementById('cd-nic').value.trim();
+  const newLicense = document.getElementById('cd-license').value.trim();
+  const newEmergName  = document.getElementById('cd-emerg-name').value.trim();
+  const newEmergPhone = document.getElementById('cd-emerg-phone').value.trim();
+  const newAddress = document.getElementById('cd-address').value.trim();
+  const newStart   = document.getElementById('cd-start').value;
+  const newDeposit = parseInt(document.getElementById('cd-deposit').value) || 0;
+  const paymentsAction = document.getElementById('cd-payments-action').value;
+  const reason     = document.getElementById('cd-reason').value.trim();
+
+  if (!newName) { alert('Please enter the new driver\'s name.'); return; }
+  if (!newStart) { alert('Please enter the new rental start date.'); return; }
+
+  const untilDate = new Date(newStart);
+  untilDate.setDate(untilDate.getDate() - 1);
+  const untilStr = untilDate.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  const fromStr  = new Date(v.startDate).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+
+  // Archive old driver
+  if (!v.driverHistory) v.driverHistory = [];
+  v.driverHistory.push({
+    name: v.driver,
+    phone: v.phone,
+    nic: v.nic,
+    license: v.license,
+    emergName: v.emergName,
+    emergPhone: v.emergPhone,
+    address: v.address,
+    from: fromStr,
+    until: untilStr,
+    depositAmount: v.deposit ? v.deposit.amount : 0,
+    depositStatus: v.deposit ? v.deposit.status : '—',
+    changeReason: reason,
+    changedOn: today.toLocaleDateString('en-GB')
+  });
+
+  // Update vehicle with new driver
+  v.driver     = newName;
+  v.phone      = newPhone;
+  v.nic        = newNic;
+  v.license    = newLicense;
+  v.emergName  = newEmergName;
+  v.emergPhone = newEmergPhone;
+  v.address    = newAddress;
+  v.startDate  = newStart;
+
+  // New deposit
+  v.deposit = {
+    amount: newDeposit,
+    status: newDeposit > 0 ? 'held' : 'none',
+    date: newDeposit > 0 ? today.toLocaleDateString('en-GB') : null
+  };
+
+  // Handle pending payments
+  if (paymentsAction === 'clear') {
+    // Remove all pending/partial payments; keep paid ones
+    v.payments = v.payments.filter(p => p.paid === 'paid');
+    // Re-generate pending payments from new start date onward
+    const newStartDate = new Date(newStart);
+    const now = new Date();
+    let d = new Date(newStartDate.getFullYear(), newStartDate.getMonth(), 1);
+    while (d <= now) {
+      const lbl = monthLabel(d);
+      // Skip if a paid record already covers this month
+      if (!v.payments.find(p => p.month === lbl)) {
+        const isPast = d < new Date(now.getFullYear(), now.getMonth(), 1);
+        const dueDate = new Date(d.getFullYear(), d.getMonth(), v.dueDay).toLocaleDateString('en-GB');
+        v.payments.push({
+          month: lbl,
+          amount: v.rent,
+          paid: 'pending',
+          paidAmount: 0,
+          paidDate: null,
+          dueDate: dueDate
+        });
+      }
+      d.setMonth(d.getMonth() + 1);
+    }
+    // Sort payments chronologically
+    v.payments.sort((a,b) => new Date(a.month.replace(' ',' 1 ')) - new Date(b.month.replace(' ',' 1 ')));
+  }
+  // if 'keep', do nothing to payments — new driver inherits them
+
+  closeModal('change-driver-modal');
+  changeDriverCtx = null;
+  refreshVehicle(v.id);
+  renderSidebar();
+  renderOverview();
 }
 
 // ── UPDATE RENTAL FEE ─────────────────────────────────────────
@@ -2878,15 +3569,16 @@ const docFields = [
   { key: 'revLicense',   label: 'Revenue License' },
   { key: 'insurance',    label: 'Insurance' },
   { key: 'emission',     label: 'Emission Test' },
-  { key: 'fitness',      label: 'Fitness Certificate' },
-  { key: 'roadPermit',   label: 'Road Permit / Route Permit' },
-  { key: 'vat',          label: 'Vehicle Auth. (VIC/TAX)' },
 ];
 function buildDocExpiry(v) {
   return docFields.map(f => {
     const exp = v.docs?.[f.key] || '';
+    // For insurance row, show type badge alongside
+    const insTypeBadge = f.key === 'insurance' && v.docs?.insuranceType
+      ? `<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;background:var(--blue-pale);color:var(--blue);margin-left:6px;">${v.docs.insuranceType === 'full' ? 'Full Insurance' : '3rd Party'}</span>`
+      : '';
     return `<div class="doc-expiry-row" id="docrow-${v.id}-${f.key}">
-      <div class="doc-name">${f.label}</div>
+      <div class="doc-name">${f.label}${insTypeBadge}</div>
       <div style="flex:1;display:flex;align-items:center;gap:8px;">${docBadge(exp)}</div>
       <button type="button" class="doc-edit-btn" onclick="editDoc(${v.id},'${f.key}')">Edit</button>
     </div>`;
@@ -2897,8 +3589,16 @@ function editDoc(vid, key) {
   const field = docFields.find(f => f.key === key);
   const curVal = v.docs?.[key] || '';
   const rowEl = document.getElementById(`docrow-${vid}-${key}`);
+  const insTypeExtra = key === 'insurance'
+    ? `<select id="docinput-${vid}-ins-type" style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:6px;color:var(--txt);font-size:12px;padding:5px 8px;font-family:var(--font-body);">
+        <option value="">— Type —</option>
+        <option value="full" ${v.docs?.insuranceType==='full'?'selected':''}>Full Insurance</option>
+        <option value="3rd" ${v.docs?.insuranceType==='3rd'?'selected':''}>3rd Party</option>
+       </select>`
+    : '';
   rowEl.innerHTML = `<div class="doc-name">${field.label}</div>
     <input class="doc-inline-input" id="docinput-${vid}-${key}" type="date" value="${curVal}"/>
+    ${insTypeExtra}
     <button type="button" class="btn btn-primary btn-sm" onclick="saveDoc(${vid},'${key}')">Save</button>
     <button type="button" class="btn btn-ghost btn-sm" onclick="cancelDocEdit(${vid},'${key}','${curVal}')">Cancel</button>`;
 }
@@ -2907,9 +3607,16 @@ function saveDoc(vid, key) {
   const val = document.getElementById(`docinput-${vid}-${key}`).value;
   if (!v.docs) v.docs = {};
   v.docs[key] = val;
+  if (key === 'insurance') {
+    const typeEl = document.getElementById(`docinput-${vid}-ins-type`);
+    if (typeEl) v.docs.insuranceType = typeEl.value;
+  }
   const field = docFields.find(f => f.key === key);
+  const insTypeBadge = key === 'insurance' && v.docs?.insuranceType
+    ? `<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;background:var(--blue-pale);color:var(--blue);margin-left:6px;">${v.docs.insuranceType === 'full' ? 'Full Insurance' : '3rd Party'}</span>`
+    : '';
   const rowEl = document.getElementById(`docrow-${vid}-${key}`);
-  rowEl.innerHTML = `<div class="doc-name">${field.label}</div>
+  rowEl.innerHTML = `<div class="doc-name">${field.label}${insTypeBadge}</div>
     <div style="flex:1;display:flex;align-items:center;gap:8px;">${docBadge(val)}</div>
     <button type="button" class="doc-edit-btn" onclick="editDoc(${vid},'${key}')">Edit</button>`;
   renderSidebar();
@@ -3003,6 +3710,9 @@ function confirmEditPayment() {
   closeModal('edit-payment-modal');
   editPaymentCtx = null;
   refreshVehicle(v.id);
+  renderOverview();
+  renderSidebar();
+  window._db.saveVehicle(v);
 }
 
 function deletePaymentRecord(vid, month) {
@@ -3019,27 +3729,35 @@ let serviceDoneCtx = null;
 function openMarkServiceDone(vid){
   serviceDoneCtx = {vid};
   const v = vehicles.find(x=>x.id===vid);
-  const lastOdo = (v.odometerLog||[]).length ? v.odometerLog[v.odometerLog.length-1].reading : (v.lastServOdometer||'');
-  document.getElementById('svc-date').value = todayStr;
-  document.getElementById('svc-odo').value = lastOdo||'';
-  document.getElementById('svc-odo').placeholder = lastOdo ? 'Last: '+Number(lastOdo).toLocaleString()+' km' : 'e.g. 58000';
-  document.getElementById('svc-note').value = '';
+  const odoLog = (v.odometerLog||[]).slice().sort((a,b)=>b.reading-a.reading);
+  const lastOdo = odoLog.length ? odoLog[0].reading : (v.lastServOdometer||'');
+  document.getElementById('sd-date').value = todayStr;
+  document.getElementById('sd-odo').value = lastOdo||'';
+  document.getElementById('sd-odo').placeholder = lastOdo ? 'Last: '+Number(lastOdo).toLocaleString()+' km' : 'e.g. 58000';
+  document.getElementById('sd-serv-km').value = v.servKm||'';
+  document.getElementById('sd-serv-mo').value = v.servMonths||'';
+  document.getElementById('sd-note').value = '';
   openModal('service-done-modal');
 }
 function confirmServiceDone(){
   if(!serviceDoneCtx) return;
   const v = vehicles.find(x=>x.id===serviceDoneCtx.vid);
-  const odo = parseInt(document.getElementById('svc-odo').value);
-  const dateRaw = document.getElementById('svc-date').value;
-  const note = document.getElementById('svc-note').value.trim();
+  const odo = parseInt(document.getElementById('sd-odo').value);
+  const dateRaw = document.getElementById('sd-date').value;
+  const note = document.getElementById('sd-note').value.trim();
   if(!odo){alert('Please enter the odometer reading at time of service.');return;}
-  const lastOdo = (v.odometerLog||[]).length ? v.odometerLog[v.odometerLog.length-1].reading : null;
+  const lastOdo = (v.odometerLog||[]).length ? Math.max(...v.odometerLog.map(e=>e.reading)) : null;
   if(lastOdo && odo < lastOdo){
     if(!confirm(`Reading ${odo.toLocaleString()} km is less than last recorded ${lastOdo.toLocaleString()} km. Save anyway?`)) return;
   }
   // Reset service baseline
   v.lastServDate = dateRaw;
   v.lastServOdometer = odo;
+  // Update service intervals if provided
+  const newServKm = parseInt(document.getElementById('sd-serv-km').value)||null;
+  const newServMo = parseInt(document.getElementById('sd-serv-mo').value)||null;
+  if(newServKm) v.servKm = newServKm;
+  if(newServMo) v.servMonths = newServMo;
   // Also log this as an odometer entry
   if(!v.odometerLog) v.odometerLog=[];
   const dateStr = new Date(dateRaw).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
