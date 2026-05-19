@@ -470,6 +470,186 @@ body{display:flex;flex-direction:column;min-height:100vh;}
   .sidebar-fleet-label,.v-nav-item,.sidebar-nav{display:none;}
   .main{min-height:0;}
 }
+
+/* ── ANIMATIONS ────────────────────────────────────────────── */
+
+/* Keyframes */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,0)}50%{box-shadow:0 0 0 5px rgba(29,158,117,0.18)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes pinBounce{0%,100%{transform:scale(1)}40%{transform:scale(1.3)}70%{transform:scale(0.9)}}
+@keyframes errorShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes modalSlideIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes sidebarItemIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes kpiCountUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spinOnce{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dotFill{from{transform:scale(0.5);opacity:0.5}to{transform:scale(1);opacity:1}}
+@keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes overlayFadeOut{from{opacity:1}to{opacity:0}}
+@keyframes pageSlideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+
+/* Login screen entrance */
+#login-screen .login-box{animation:scaleIn .4s cubic-bezier(.34,1.2,.64,1) both;}
+
+/* Login screen exit */
+#login-screen.hiding{animation:fadeIn .3s reverse both;}
+
+/* Pin key press ripple */
+.pin-key{position:relative;overflow:hidden;transition:background .12s, transform .1s, box-shadow .15s;}
+.pin-key:active{transform:scale(0.92);}
+.pin-key::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:inherit;opacity:0;transition:opacity .2s;}
+.pin-key:active::after{opacity:1;}
+
+/* Pin dot fill animation */
+.pin-dot.filled{animation:dotFill .18s cubic-bezier(.34,1.3,.64,1) both;}
+
+/* PIN error shake */
+.login-box.shake{animation:errorShake .4s ease;}
+
+/* Modal animation */
+.modal-overlay.open .modal{animation:modalSlideIn .28s cubic-bezier(.34,1.1,.64,1) both;}
+.modal-overlay{transition:background .2s;}
+
+/* Page transitions */
+.page.active,.vehicle-page.active{animation:pageSlideIn .22s ease both;}
+
+/* Sidebar nav items stagger in */
+.sidebar-nav .nav-item{animation:sidebarItemIn .3s ease both;}
+.sidebar-nav .nav-item:nth-child(1){animation-delay:.04s}
+.sidebar-nav .nav-item:nth-child(2){animation-delay:.08s}
+.sidebar-nav .nav-item:nth-child(3){animation-delay:.12s}
+.sidebar-nav .nav-item:nth-child(4){animation-delay:.16s}
+
+/* Fleet cards stagger in */
+.fleet-card{animation:fadeUp .3s ease both;}
+.fleet-card:nth-child(1){animation-delay:.03s}
+.fleet-card:nth-child(2){animation-delay:.07s}
+.fleet-card:nth-child(3){animation-delay:.11s}
+.fleet-card:nth-child(4){animation-delay:.15s}
+.fleet-card:nth-child(5){animation-delay:.19s}
+.fleet-card:nth-child(6){animation-delay:.23s}
+.fleet-card:nth-child(7){animation-delay:.27s}
+.fleet-card:nth-child(8){animation-delay:.31s}
+
+/* Fleet card hover lift */
+.fleet-card{transition:border-color .15s, transform .18s cubic-bezier(.34,1.2,.64,1), box-shadow .18s;}
+.fleet-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.18);}
+
+/* KPI cards animate in */
+.kpi{animation:fadeUp .32s ease both;}
+.kpi:nth-child(1){animation-delay:.05s}
+.kpi:nth-child(2){animation-delay:.1s}
+.kpi:nth-child(3){animation-delay:.15s}
+.kpi:nth-child(4){animation-delay:.2s}
+
+/* KPI values */
+.kpi-val{transition:color .3s;}
+
+/* Alert badge pop */
+.badge-alert{animation:badgePop .3s cubic-bezier(.34,1.4,.64,1) both;animation-delay:.3s;}
+
+/* Active nav item glow pulse */
+.nav-item.active{animation:pulseGlow 2.5s ease-in-out infinite;}
+
+/* Logo icon spin on hover */
+.logo-icon{transition:transform .35s cubic-bezier(.34,1.2,.64,1);}
+.sidebar-logo:hover .logo-icon{transform:rotate(12deg) scale(1.08);}
+
+/* Buttons */
+.btn{transition:background .15s, transform .12s, box-shadow .15s, opacity .15s;}
+.btn:active{transform:scale(0.96);}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(29,158,117,0.3);}
+.btn-danger:active{transform:scale(0.96);}
+
+/* Add vehicle button */
+.add-v-btn{transition:background .15s, transform .12s, box-shadow .15s;}
+.add-v-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(29,158,117,0.22);}
+.add-v-btn:active{transform:scale(0.97);}
+
+/* Table rows hover */
+.hist-section tbody tr,.dep-section tbody tr,.driver-history-table tbody tr,.odo-log-table tr{transition:background .12s;}
+
+/* Status pills */
+.status-pill,.hist-status,.dep-status{transition:opacity .2s;}
+
+/* Mark paid button */
+.mark-paid-btn{transition:all .15s, transform .1s;}
+.mark-paid-btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(29,158,117,0.2);}
+.mark-paid-btn:active{transform:scale(0.95);}
+
+/* Bar chart fills animate */
+.bar-fill{transition:width .6s cubic-bezier(.4,0,.2,1);}
+.ytd-bar{transition:height .5s cubic-bezier(.4,0,.2,1);}
+
+/* Fee type buttons */
+.fee-type-btn{transition:all .15s, transform .1s;}
+.fee-type-btn:active{transform:scale(0.96);}
+
+/* Info cards in vehicle page */
+.info-card,.mini-kpi,.odo-card,.odo-stat,.hist-section,.dep-section,.odo-log-section{animation:fadeUp .28s ease both;animation-delay:.05s;}
+
+/* Filter buttons */
+.filter-btn{transition:all .15s, transform .1s;}
+.filter-btn:active{transform:scale(0.96);}
+
+/* Alert rows */
+.alert-row{animation:fadeUp .25s ease both;transition:background .12s, transform .15s;}
+.alert-row:hover{transform:translateX(3px);}
+
+/* Vehicle nav items in sidebar */
+.v-nav-item{transition:background .15s, transform .12s, color .15s;}
+.v-nav-item:hover{transform:translateX(2px);}
+
+/* Inner tabs */
+.itab{transition:color .15s, border-bottom-color .15s;}
+
+/* Handover entries */
+.handover-entry{transition:background .15s;}
+
+/* Doc edit button */
+.doc-edit-btn{transition:all .15s, transform .1s;}
+.doc-edit-btn:hover{transform:translateY(-1px);}
+
+/* Photo upload zone */
+.vehicle-photo-upload-zone,.photo-upload-zone{transition:border-color .2s, background .2s, transform .15s;}
+.vehicle-photo-upload-zone:hover{transform:scale(1.01);}
+
+/* Theme toggle */
+.theme-toggle{transition:all .2s, transform .15s;}
+.theme-toggle:hover{transform:rotate(-12deg) scale(1.1);}
+
+/* Lightbox */
+.photo-lightbox{transition:opacity .2s;}
+.photo-lightbox.open img{animation:scaleIn .25s cubic-bezier(.34,1.1,.64,1) both;}
+
+/* Note entries */
+.note-entry{animation:fadeUp .22s ease both;transition:box-shadow .15s;}
+.note-entry:hover{box-shadow:0 2px 12px rgba(0,0,0,0.13);}
+
+/* Storage bar */
+.storage-bar-fill{transition:width .7s cubic-bezier(.4,0,.2,1);}
+
+/* Odometer progress */
+.odo-progress-fill{transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+/* Section titles */
+.section-title{animation:fadeIn .3s ease both;animation-delay:.08s;}
+
+/* Page headers */
+.page-title,.vp-title{animation:fadeUp .3s ease both;}
+.page-sub,.vp-plate{animation:fadeUp .3s ease both;animation-delay:.06s;}
+
+/* Sidebar logo */
+.logo-name{animation:fadeUp .35s ease both;animation-delay:.1s;}
+.logo-tagline{animation:fadeUp .35s ease both;animation-delay:.14s;}
+
+/* Smooth theme transition */
+body{transition:background .3s, color .2s;}
+.sidebar,.kpi,.fleet-card,.info-card,.mini-kpi,.hist-section,.dep-section,.odo-card,.chart-card,.odo-log-section,.modal,.pay-record-box{transition:background .3s, border-color .3s;}
 </style>
 </head>
 <body>
@@ -2075,22 +2255,18 @@ function buildVehiclePage(v){
   const nextServDate=v.lastServDate?new Date(v.lastServDate):null;
   if(nextServDate&&v.servMonths)nextServDate.setMonth(nextServDate.getMonth()+v.servMonths);
   const nextOdo=v.lastServOdometer&&v.servKm?v.lastServOdometer+v.servKm:null;
+  const lastServDateFmt = v.lastServDate ? (() => { try { return new Date(v.lastServDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch(e){ return v.lastServDate; }})() : null;
   const maintHtml=`<table class="info-table">
-    <tr><td>Last service</td><td>${v.lastServDate||'—'} @ ${v.lastServOdometer?v.lastServOdometer.toLocaleString()+' km':'—'}</td></tr>
+    <tr><td>Last service</td><td>${lastServDateFmt||'—'} @ ${v.lastServOdometer?v.lastServOdometer.toLocaleString()+' km':'—'}</td></tr>
     <tr><td>Next service due</td><td>${nextServDate&&v.servMonths?nextServDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</td></tr>
     <tr><td>Next service odo</td><td>${nextOdo?nextOdo.toLocaleString()+' km':'—'}</td></tr>
     <tr><td>Service interval</td><td>${v.servKm?v.servKm.toLocaleString()+' km':'—'} / ${v.servMonths?v.servMonths+' months':'—'}</td></tr>
-  </table>
-  <div style="margin-top:12px;">
-    <button type="button" class="btn btn-primary btn-sm" onclick="openMarkServiceDone(${v.id})">✓ Mark service done &amp; reset odometer</button>
-  </div>`;
+  </table>`;
 
   // odometer
   const odoLog = (v.odometerLog||[]).slice().sort((a,b)=>a.id-b.id);
-  const parseOdoDateFn = s => { if(!s) return 0; const m = s.match(/(\d+)\s+(\w+)\s+(\d+)/); if(!m) return 0; return new Date(`${m[2]} ${m[1]}, ${m[3]}`).getTime()||0; };
-  const odoByDate = odoLog.slice().sort((a,b)=>parseOdoDateFn(a.date)-parseOdoDateFn(b.date));
-  const currentOdo = odoByDate.length ? odoByDate[odoByDate.length-1].reading : (v.lastServOdometer||null);
-  const firstOdo = odoByDate.length ? odoByDate[0].reading : null;
+  const currentOdo = odoLog.length ? odoLog[odoLog.length-1].reading : (v.lastServOdometer||null);
+  const firstOdo = odoLog.length ? odoLog[0].reading : null;
   const totalDriven = (currentOdo&&firstOdo&&currentOdo!==firstOdo) ? currentOdo - firstOdo : null;
   const nextServOdo = v.lastServOdometer&&v.servKm ? v.lastServOdometer+v.servKm : null;
   // Use currentOdo if available, else fall back to lastServOdometer as best known reading
@@ -2513,15 +2689,15 @@ function buildVehiclePage(v){
           allLogs.sort((a,b)=> new Date(b.date) - new Date(a.date));
 
           return `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openMarkServiceDone(${v.id})">✓ Mark service done &amp; reset odometer</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="openAddOtherSvc(${v.id})">+ Add other part / service</button>
+          </div>
           <div class="svc-grid">${cards}</div>
           ${otherCards ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:4px;">
             <div style="font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;">Other / Custom parts</div>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="openAddOtherSvc(${v.id})">+ Add other</button>
           </div>
-          <div class="svc-grid">${otherCards}</div>` :
-          `<div style="display:flex;justify-content:flex-end;margin-bottom:16px;margin-top:-8px;">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="openAddOtherSvc(${v.id})">+ Add other part / service</button>
-          </div>`}
+          <div class="svc-grid">${otherCards}</div>` : ''}
           <div class="svc-log-section">
             <h4>🗒 Full service log <span style="font-weight:400;font-size:11px;">${allLogs.length} records</span></h4>
             <table class="svc-log-table">
@@ -2618,38 +2794,41 @@ function getHandoverDist(v,h){
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────
+// Replay animation on a page element
+function _animatePage(el){if(!el)return;el.style.animation='none';void el.offsetWidth;el.style.animation='';}
+
 function showOverview(){
   document.querySelectorAll('.page,.vehicle-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item,.v-nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-overview').classList.add('active');
+  const pg=document.getElementById('page-overview');pg.classList.add('active');_animatePage(pg);
   document.getElementById('nav-overview').classList.add('active');
   renderOverview();
 }
 function showAlerts(){
   document.querySelectorAll('.page,.vehicle-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item,.v-nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-alerts').classList.add('active');
+  const pg=document.getElementById('page-alerts');pg.classList.add('active');_animatePage(pg);
   document.getElementById('nav-alerts').classList.add('active');
   renderAlerts();
 }
 function showDrivers(){
   document.querySelectorAll('.page,.vehicle-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item,.v-nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-drivers').classList.add('active');
+  const pg=document.getElementById('page-drivers');pg.classList.add('active');_animatePage(pg);
   document.getElementById('nav-drivers').classList.add('active');
   renderDrivers();
 }
 function showReports(){
   document.querySelectorAll('.page,.vehicle-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item,.v-nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-reports').classList.add('active');
+  const pg=document.getElementById('page-reports');pg.classList.add('active');_animatePage(pg);
   document.getElementById('nav-reports').classList.add('active');
   renderReports();
 }
 function showVehicle(id){
   document.querySelectorAll('.page,.vehicle-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item,.v-nav-item').forEach(b=>b.classList.remove('active'));
-  const vp=document.getElementById('vpage-'+id);if(vp){vp.classList.add('active');}
+  const vp=document.getElementById('vpage-'+id);if(vp){vp.classList.add('active');_animatePage(vp);}
   const nb=document.getElementById('vnav-'+id);if(nb){nb.classList.add('active');}
 }
 function showTab(vid,tab,btn){
@@ -3520,8 +3699,8 @@ function refreshVehicle(id){
 }
 
 // ── MODAL ─────────────────────────────────────────────────────
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openModal(id){const el=document.getElementById(id);el.classList.add('open');const modal=el.querySelector('.modal');if(modal){modal.style.animation='none';void modal.offsetWidth;modal.style.animation='';};}
+function closeModal(id){const el=document.getElementById(id);const modal=el.querySelector('.modal');if(modal){modal.style.transition='opacity .18s ease,transform .18s ease';modal.style.opacity='0';modal.style.transform='translateY(12px) scale(0.97)';setTimeout(()=>{el.classList.remove('open');modal.style.transition='';modal.style.opacity='';modal.style.transform='';},180);}else{el.classList.remove('open');}}
 
 // ── SECURITY / PIN LOGIN ─────────────────────────────────────
 const CORRECT_PIN = '1968'; // Change this to your desired PIN
@@ -3533,10 +3712,17 @@ function pinPress(digit) {
   if (pinEntry.length === 4) {
     setTimeout(() => {
       if (pinEntry === CORRECT_PIN) {
-        document.getElementById('login-screen').style.display = 'none';
+        const ls = document.getElementById('login-screen');
+        ls.style.transition = 'opacity .35s ease, transform .35s ease';
+        ls.style.opacity = '0';
+        ls.style.transform = 'scale(1.04)';
+        setTimeout(() => { ls.style.display = 'none'; ls.style.opacity=''; ls.style.transform=''; }, 360);
       } else {
         document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
         document.getElementById('login-err').textContent = 'Incorrect PIN. Try again.';
+        const box = document.querySelector('.login-box');
+        box.classList.add('shake');
+        setTimeout(() => box.classList.remove('shake'), 450);
         setTimeout(() => {
           pinEntry = '';
           updatePinDots();
@@ -3662,7 +3848,9 @@ function confirmOdo(){
   const date = new Date(dateRaw).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   v.odometerLog.push({id:Date.now(),date,reading,note});
   closeModal('odo-modal');
-  refreshVehicle(odoCtx.vid);
+  odoCtx = null;
+  refreshVehicle(v.id);
+  window._db.saveVehicle(v);
 }
 
 
