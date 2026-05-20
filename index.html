@@ -71,7 +71,7 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .page-title{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--txt);letter-spacing:-0.4px;}
 .page-sub{font-size:13px;color:var(--txt3);margin-top:4px;margin-bottom:20px;}
 .page-body{padding:28px 32px;flex:1;overflow-y:auto;min-height:0;}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;}
 .kpi{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--radius-lg);padding:18px 20px;}
 .kpi-label{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
 .kpi-val{font-size:26px;font-weight:500;font-family:var(--font-head);color:var(--txt);}
@@ -204,6 +204,34 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px;}
+
+/* ── RECEIPT PRINT STYLES ── */
+@media print {
+  @page { size: A4; margin: 0; }
+  body * { visibility: hidden !important; }
+  #receipt-print-area, #receipt-print-area * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #receipt-modal-overlay { display: none !important; }
+  #receipt-print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    z-index: 99999 !important;
+  }
+}
+#receipt-print-area { display: none; }
 
 /* ── VEHICLE PHOTO ── */
 .vehicle-photo-thumb{width:38px;height:38px;border-radius:9px;object-fit:cover;border:0.5px solid var(--bdr2);}
@@ -747,6 +775,7 @@ body{transition:background .3s, color .2s;}
         <div class="kpi"><div class="kpi-label">Collected this month</div><div class="kpi-val" id="ov-collected">—</div><div class="kpi-sub" id="ov-col-pct">—</div></div>
         <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-val r" id="ov-due">—</div><div class="kpi-sub" id="ov-due-veh">—</div></div>
         <div class="kpi"><div class="kpi-label">Overdue vehicles</div><div class="kpi-val a" id="ov-overdue">—</div><div class="kpi-sub">need attention</div></div>
+        <div class="kpi"><div class="kpi-label">Total profit</div><div class="kpi-val g" id="ov-profit">—</div><div class="kpi-sub">income minus expenses</div></div>
       </div>
       <div class="section-title">All vehicles</div>
       <div class="fleet-grid" id="fleet-grid"></div>
@@ -1371,6 +1400,13 @@ body{transition:background .3s, color .2s;}
         <div class="mfg"><label>New rental start date</label><input id="cd-start" type="date"/></div>
         <div class="mfg"><label>New security deposit (LKR)</label><input id="cd-deposit" type="number" placeholder="e.g. 50000"/></div>
       </div>
+      <div style="background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:500;">📍 Odometer at handover</div>
+        <div class="mfrow" style="margin-bottom:0;">
+          <div class="mfg" style="margin-bottom:0;"><label>Odometer reading (km) <span style="font-weight:400;color:var(--txt3)">optional</span></label><input id="cd-odo" type="number" placeholder="e.g. 54200"/></div>
+          <div class="mfg" style="margin-bottom:0;"><label>Note <span style="font-weight:400;color:var(--txt3)">optional</span></label><input id="cd-odo-note" placeholder="e.g. Handover condition good"/></div>
+        </div>
+      </div>
       <div class="mfrow">
         <div class="mfg">
           <label>Unpaid / pending payments</label>
@@ -1805,6 +1841,12 @@ function renderOverview(){
   document.getElementById('ov-due').textContent=fmt(due);
   document.getElementById('ov-due-veh').textContent=rv.filter(v=>{const p=v.payments.find(p=>p.month===cm&&p.paid!=='paid');return!!p;}).length+' vehicles pending';
   document.getElementById('ov-overdue').textContent=ov;
+  const totalIncome=rv.reduce((s,v)=>s+v.payments.filter(p=>p.paid==='paid').reduce((ss,p)=>ss+(p.paidAmount||p.amount),0),0);
+  const totalExpenses=rv.reduce((s,v)=>s+(v.expenses||[]).filter(e=>e.paidBy!=='driver').reduce((ss,e)=>ss+e.amount,0),0);
+  const totalProfit=totalIncome-totalExpenses;
+  const profitEl=document.getElementById('ov-profit');
+  profitEl.textContent=fmt(totalProfit);
+  profitEl.className='kpi-val '+(totalProfit>=0?'g':'r');
   const grid=document.getElementById('fleet-grid');
   if(!vehicles.length){grid.innerHTML='<div class="empty-state">No vehicles yet.<p>Click "+ Add vehicle" to get started.</p></div>';return;}
   grid.innerHTML=vehicles.map(v=>{
@@ -1857,9 +1899,9 @@ const SVC_ALERT_META = {
   battery:    {label:'Battery',      icon:'🔋',  intervalKm:null,  intervalMo:30},
   clutch:     {label:'Clutch',       icon:'🔩',  intervalKm:60000, intervalMo:null},
   coolant:    {label:'Coolant',      icon:'🌡️', intervalKm:30000, intervalMo:24},
-  timing:     {label:'Timing belt',  icon:'⏱️', intervalKm:80000, intervalMo:null},
+  timing:     {label:'Wheel alignment',  icon:'⏱️', intervalKm:80000, intervalMo:null},
   sparkPlug:  {label:'Spark plugs',  icon:'⚡',  intervalKm:20000, intervalMo:24},
-  fuelFilter: {label:'Fuel filter',  icon:'⛽',  intervalKm:20000, intervalMo:null},
+  fuelFilter: {label:'AC filter',  icon:'⛽',  intervalKm:20000, intervalMo:null},
 };
 
 function getAllAlerts(){
@@ -2216,7 +2258,265 @@ function exportCSV(){
 }
 
 function exportPDF(){
-  window.print();
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = 210, pageH = 297;
+    const ml = 18, mr = 18, contentW = pageW - ml - mr;
+    const cm = curMonth();
+    const rentalVehicles = vehicles.filter(v => !v.personal);
+    let y = 0;
+
+    // ── GREEN HEADER BAND ────────────────────────────────────
+    doc.setFillColor(29, 158, 117);
+    doc.rect(0, 0, pageW, 52, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.text('KL Ledger', ml, 18);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(200, 235, 220);
+    doc.text('Vehicle Rental Manager', ml, 26);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text('FLEET REPORT — ' + cm.toUpperCase(), pageW - mr, 18, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(200, 235, 220);
+    const printedOn = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.text('Printed on ' + printedOn, pageW - mr, 26, { align: 'right' });
+
+    // ── KPI BOXES IN HEADER ──────────────────────────────────
+    const totalExpected = rentalVehicles.reduce((s,v) => s + (v.feeType !== 'daily' ? v.rent : 0), 0);
+    const totalCollected = rentalVehicles.reduce((s,v) => {
+      const p = v.payments.find(p => p.month === cm && p.paid === 'paid');
+      return s + (p ? p.paidAmount || p.amount : 0);
+    }, 0);
+    const totalExpenses = rentalVehicles.reduce((s,v) => s + (v.expenses||[]).reduce((ss,e) => ss + e.amount, 0), 0);
+    const ytd = getYTDData(rentalVehicles);
+    const ytdTotal = ytd.reduce((s,m) => s + m.collected, 0);
+
+    const kpis = [
+      { label: 'Expected', val: 'LKR ' + Math.round(totalExpected).toLocaleString() },
+      { label: 'Collected', val: 'LKR ' + Math.round(totalCollected).toLocaleString() },
+      { label: 'Expenses', val: 'LKR ' + Math.round(totalExpenses).toLocaleString() },
+      { label: 'YTD Income', val: 'LKR ' + Math.round(ytdTotal).toLocaleString() },
+    ];
+    const kpiW = contentW / 4;
+    kpis.forEach((k, i) => {
+      const kx = ml + i * kpiW;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(200, 235, 220);
+      doc.text(k.label.toUpperCase(), kx + kpiW / 2, 38, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text(k.val, kx + kpiW / 2, 47, { align: 'center' });
+    });
+
+    y = 62;
+
+    // ── MONTHLY PAYMENT SUMMARY TABLE ───────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Monthly Payment Summary — ' + cm, ml, y);
+    y += 8;
+
+    // Table header
+    const cols = [
+      { label: 'Vehicle', x: ml, w: 52, align: 'left' },
+      { label: 'Plate', x: ml + 52, w: 32, align: 'left' },
+      { label: 'Driver', x: ml + 84, w: 38, align: 'left' },
+      { label: 'Expected', x: ml + 122, w: 30, align: 'right' },
+      { label: 'Collected', x: ml + 152, w: 30, align: 'right' },
+      { label: 'Status', x: ml + 182, w: contentW - 164, align: 'right' },
+    ];
+
+    doc.setFillColor(245, 247, 250);
+    doc.rect(ml, y, contentW, 9, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(140, 145, 160);
+    cols.forEach(c => {
+      const tx = c.align === 'right' ? c.x + c.w : c.x;
+      doc.text(c.label.toUpperCase(), tx, y + 6, { align: c.align });
+    });
+    y += 9;
+
+    // Table rows
+    rentalVehicles.forEach((v, i) => {
+      const p = v.payments.find(p => p.month === cm);
+      const paid = p && p.paid === 'paid' ? p.paidAmount || p.amount
+                 : p && p.paid === 'partial' ? p.paidAmount || 0 : 0;
+      const status = p ? (p.paid === 'paid' ? 'Paid' : p.paid === 'partial' ? 'Partial' : 'Unpaid') : 'Unpaid';
+      const rowH = 10;
+
+      if (i % 2 === 0) {
+        doc.setFillColor(252, 253, 254);
+        doc.rect(ml, y, contentW, rowH, 'F');
+      }
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(26, 26, 26);
+      doc.text(v.name.substring(0, 18), ml, y + 7);
+      doc.text((v.plate||'').substring(0, 12), ml + 52, y + 7);
+      doc.text((v.driver||'').split(' ')[0].substring(0, 14), ml + 84, y + 7);
+
+      doc.setFont('helvetica', 'normal');
+      doc.text('LKR ' + Math.round(v.rent).toLocaleString(), ml + 122 + 30, y + 7, { align: 'right' });
+
+      // Color-code collected
+      const statusColor = paid >= v.rent ? [29,158,117] : paid > 0 ? [55,138,221] : [226,75,74];
+      doc.setTextColor(...statusColor);
+      doc.text('LKR ' + Math.round(paid).toLocaleString(), ml + 152 + 30, y + 7, { align: 'right' });
+
+      // Status pill text
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(status, ml + 182 + (contentW - 164), y + 7, { align: 'right' });
+
+      doc.setDrawColor(238, 240, 244);
+      doc.setLineWidth(0.3);
+      doc.line(ml, y + rowH, ml + contentW, y + rowH);
+
+      doc.setTextColor(26, 26, 26);
+      y += rowH;
+    });
+
+    // Totals row
+    y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 26);
+    doc.text('TOTAL', ml, y);
+    doc.text('LKR ' + Math.round(totalExpected).toLocaleString(), ml + 122 + 30, y, { align: 'right' });
+    doc.setTextColor(29, 158, 117);
+    doc.text('LKR ' + Math.round(totalCollected).toLocaleString(), ml + 152 + 30, y, { align: 'right' });
+    y += 12;
+
+    // ── YTD SECTION ─────────────────────────────────────────
+    if (y > pageH - 70) { doc.addPage(); y = 20; }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Year-to-Date Income', ml, y);
+    y += 8;
+
+    // Simple bar chart
+    const maxYTD = Math.max(...ytd.map(m => m.collected), 1);
+    const barAreaW = contentW;
+    const barW = Math.floor(barAreaW / ytd.length) - 2;
+    const barMaxH = 30;
+    ytd.forEach((m, i) => {
+      const bh = Math.max(2, Math.round((m.collected / maxYTD) * barMaxH));
+      const bx = ml + i * (barAreaW / ytd.length);
+      const by = y + barMaxH - bh;
+      const isCurrent = m.label === cm;
+      doc.setFillColor(isCurrent ? 29 : 93, isCurrent ? 158 : 202, isCurrent ? 117 : 165);
+      doc.rect(bx, by, barW, bh, 'F');
+
+      // Month label
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(140, 145, 160);
+      doc.text(m.label.split(' ')[0], bx + barW / 2, y + barMaxH + 5, { align: 'center' });
+
+      // Value label above bar (only if enough space)
+      if (m.collected > 0) {
+        doc.setFontSize(6);
+        doc.setTextColor(80, 90, 110);
+        const shortVal = m.collected >= 1000 ? Math.round(m.collected/1000) + 'k' : Math.round(m.collected).toString();
+        doc.text(shortVal, bx + barW / 2, by - 2, { align: 'center' });
+      }
+    });
+    y += barMaxH + 12;
+
+    // ── PER-VEHICLE PROFIT TABLE ─────────────────────────────
+    if (y > pageH - 60) { doc.addPage(); y = 20; }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Per-Vehicle Profit Summary (All Time)', ml, y);
+    y += 8;
+
+    const pCols = [
+      { label: 'Vehicle', x: ml, w: 55 },
+      { label: 'Total Income', x: ml + 55, w: 42, align: 'right' },
+      { label: 'Total Expenses', x: ml + 97, w: 42, align: 'right' },
+      { label: 'Net Profit', x: ml + 139, w: contentW - 121, align: 'right' },
+    ];
+
+    doc.setFillColor(245, 247, 250);
+    doc.rect(ml, y, contentW, 9, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(140, 145, 160);
+    pCols.forEach(c => {
+      const tx = c.align === 'right' ? c.x + c.w : c.x;
+      doc.text(c.label.toUpperCase(), tx, y + 6, { align: c.align || 'left' });
+    });
+    y += 9;
+
+    rentalVehicles.forEach((v, i) => {
+      const income = v.payments.filter(p => p.paid === 'paid').reduce((s,p) => s + (p.paidAmount || p.amount), 0);
+      const expenses = (v.expenses||[]).reduce((s,e) => s + e.amount, 0);
+      const profit = income - expenses;
+      const rowH = 10;
+
+      if (i % 2 === 0) {
+        doc.setFillColor(252, 253, 254);
+        doc.rect(ml, y, contentW, rowH, 'F');
+      }
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(26, 26, 26);
+      doc.text(v.name.substring(0, 20), ml, y + 7);
+      doc.setTextColor(29, 158, 117);
+      doc.text('LKR ' + Math.round(income).toLocaleString(), ml + 55 + 42, y + 7, { align: 'right' });
+      doc.setTextColor(226, 75, 74);
+      doc.text('LKR ' + Math.round(expenses).toLocaleString(), ml + 97 + 42, y + 7, { align: 'right' });
+      doc.setTextColor(profit >= 0 ? 29 : 226, profit >= 0 ? 158 : 75, profit >= 0 ? 117 : 74);
+      doc.setFont('helvetica', 'bold');
+      doc.text('LKR ' + Math.round(profit).toLocaleString(), ml + 139 + (contentW - 121), y + 7, { align: 'right' });
+
+      doc.setDrawColor(238, 240, 244);
+      doc.setLineWidth(0.3);
+      doc.line(ml, y + rowH, ml + contentW, y + rowH);
+      y += rowH;
+    });
+
+    // ── FOOTER BAR ───────────────────────────────────────────
+    doc.setFillColor(29, 158, 117);
+    doc.rect(0, pageH - 8, pageW, 8, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('KL Ledger · Computer-generated report', pageW / 2, pageH - 3, { align: 'center' });
+
+    doc.save('KL-Ledger-Report-' + cm.replace(' ', '-') + '.pdf');
+  }
+
+  if (window.jspdf) {
+    generate();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = generate;
+    s.onerror = function() { alert('Could not load PDF library. Check internet and try again.'); };
+    document.head.appendChild(s);
+  }
 }
 
 // ── VEHICLE PAGE BUILDER ──────────────────────────────────────
@@ -2256,6 +2556,7 @@ function buildVehiclePage(v){
         <button type="button" class="mark-paid-btn" style="background:var(--blue-pale);border-color:rgba(55,138,221,.3);color:var(--blue)" onclick="openPartial(${v.id},'${p.month}')">Partial</button>`:''}
         <button type="button" class="mark-paid-btn" style="background:var(--purple-pale);border-color:rgba(139,111,212,.3);color:var(--purple)" onclick="openEditPayment(${v.id},'${p.month}')">Edit</button>
         <button type="button" class="mark-paid-btn" style="background:var(--red-pale);border-color:rgba(226,75,74,.3);color:var(--red)" onclick="deletePaymentRecord(${v.id},'${p.month}')">Delete</button>
+        ${(p.paid==='paid'||p.paid==='partial')?`<button type="button" class="mark-paid-btn" title="Print or download receipt" style="background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,.3);color:var(--teal-glow)" onclick="openReceiptOptions(${v.id},'${p.month}')">🧾 Receipt</button>`:''}
       </td>
     </tr>`;
   }).join('');
@@ -2361,11 +2662,12 @@ function buildVehiclePage(v){
     const prev = chronoIdx > 0 ? odoChronological[chronoIdx - 1] : null;
     const delta = prev ? entry.reading - prev.reading : null;
     const deltaClass = delta>5000?'high':'';
+    const handoverBadge = entry.isHandover ? `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--blue-pale);color:var(--blue);border:0.5px solid rgba(55,138,221,.3);margin-left:6px;white-space:nowrap;">Handover</span>` : '';
     return `<tr>
       <td>${entry.date}</td>
       <td style="font-family:var(--font-mono);font-weight:500">${entry.reading.toLocaleString()} km</td>
       <td>${delta!==null?`<span class="odo-delta ${deltaClass}">+${delta.toLocaleString()} km</span>`:'<span class="odo-delta none">—</span>'}</td>
-      <td style="color:var(--txt3);font-size:12px">${entry.note||'—'}</td>
+      <td style="color:var(--txt3);font-size:12px">${entry.note||'—'}${handoverBadge}</td>
       <td><button type="button" onclick="deleteOdoEntry(${v.id},${entry.id})" style="font-size:11px;padding:3px 9px;border-radius:6px;background:var(--red-pale);border:0.5px solid rgba(226,75,74,.3);color:var(--red);cursor:pointer;font-family:var(--font-body);line-height:1.4;" title="Delete this reading">✕</button></td>
     </tr>`;
   }).join('');
@@ -2521,7 +2823,7 @@ function buildVehiclePage(v){
         <div class="driver-history-section" style="margin-top:16px;">
           <h4>🧑‍✈️ Driver history</h4>
           <table class="driver-history-table">
-            <thead><tr><th>Driver</th><th>Contact / NIC</th><th>From</th><th>Until</th><th>Deposit</th><th>Notes</th></tr></thead>
+            <thead><tr><th>Driver</th><th>Contact / NIC</th><th>From</th><th>Until</th><th>Deposit</th><th>Handover Odo</th><th>Notes</th></tr></thead>
             <tbody>
               <tr>
                 <td><div class="dh-name">${v.driver}</div><div class="dh-meta">${v.phone||'—'}</div></td>
@@ -2530,6 +2832,7 @@ function buildVehiclePage(v){
                 <td><span class="dh-current-tag">Current</span></td>
                 <td style="color:var(--txt3);font-size:12px;">${v.deposit&&v.deposit.amount?fmt(v.deposit.amount):'—'}</td>
                 <td style="color:var(--txt3);font-size:12px;">—</td>
+                <td style="color:var(--txt3);font-size:12px;">—</td>
               </tr>
               ${v.driverHistory.slice().reverse().map(h=>`<tr>
                 <td><div class="dh-name" style="color:var(--txt2);">${h.name}</div><div class="dh-meta">${h.phone||'—'}</div></td>
@@ -2537,6 +2840,7 @@ function buildVehiclePage(v){
                 <td style="color:var(--txt3);font-size:12px;">${h.from||'—'}</td>
                 <td style="color:var(--txt3);font-size:12px;">${h.until||'—'}<span class="dh-past-tag" style="margin-left:6px;">Past</span></td>
                 <td style="color:var(--txt3);font-size:12px;">${h.depositAmount?fmt(h.depositAmount):'—'}${h.depositStatus?` <span style="font-size:10px;color:var(--txt3)">(${h.depositStatus})</span>`:''}</td>
+                <td style="font-size:12px;font-family:var(--font-mono);color:var(--txt3);">${h.handoverOdo?h.handoverOdo.toLocaleString()+' km':'—'}</td>
                 <td style="color:var(--txt3);font-size:12px;">${h.changeReason||'—'}</td>
               </tr>`).join('')}
             </tbody>
@@ -2649,9 +2953,9 @@ function buildVehiclePage(v){
             {key:'battery',   label:'Battery',       icon:'🔋',  intervalKm:null,  intervalMo:30},
             {key:'clutch',    label:'Clutch',        icon:'🔩',  intervalKm:60000, intervalMo:null},
             {key:'coolant',   label:'Coolant',       icon:'🌡️', intervalKm:30000, intervalMo:24},
-            {key:'timing',    label:'Timing belt',   icon:'⏱️', intervalKm:80000, intervalMo:null},
+            {key:'timing',    label:'Wheel alignment',   icon:'⏱️', intervalKm:80000, intervalMo:null},
             {key:'sparkPlug', label:'Spark plugs',   icon:'⚡',  intervalKm:20000, intervalMo:24},
-            {key:'fuelFilter',label:'Fuel filter',   icon:'⛽',  intervalKm:20000, intervalMo:null},
+            {key:'fuelFilter',label:'AC filter',   icon:'⛽',  intervalKm:20000, intervalMo:null},
           ];
           const svcData = v.services || {};
 
@@ -3517,6 +3821,8 @@ function confirmChangeDriver() {
   const newDeposit = parseInt(document.getElementById('cd-deposit').value) || 0;
   const paymentsAction = document.getElementById('cd-payments-action').value;
   const reason     = document.getElementById('cd-reason').value.trim();
+  const handoverOdo = parseInt(document.getElementById('cd-odo').value) || null;
+  const handoverOdoNote = document.getElementById('cd-odo-note').value.trim();
 
   if (!newName) { alert('Please enter the new driver\'s name.'); return; }
   if (!newStart) { alert('Please enter the new rental start date.'); return; }
@@ -3541,8 +3847,17 @@ function confirmChangeDriver() {
     depositAmount: v.deposit ? v.deposit.amount : 0,
     depositStatus: v.deposit ? v.deposit.status : '—',
     changeReason: reason,
-    changedOn: today.toLocaleDateString('en-GB')
+    changedOn: today.toLocaleDateString('en-GB'),
+    handoverOdo: handoverOdo
   });
+
+  // Log handover odometer reading if provided
+  if (handoverOdo) {
+    if (!v.odometerLog) v.odometerLog = [];
+    const handoverDateStr = new Date(newStart).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+    const noteLabel = '🔄 Driver handover' + (handoverOdoNote ? ' — ' + handoverOdoNote : '') + ' (' + v.driver + ' → ' + newName + ')';
+    v.odometerLog.push({ id: Date.now(), date: handoverDateStr, reading: handoverOdo, note: noteLabel, isHandover: true });
+  }
 
   // Update vehicle with new driver
   v.driver     = newName;
@@ -4335,6 +4650,294 @@ function renderAll(){
   }
 }
 // Firebase listeners trigger renderAll on load — no need to call it here
+</script>
+
+<!-- ── RECEIPT PRINT STYLES (only the #receipt-print-area shows when printing) ── -->
+<style>
+@media print {
+  @page { size: A4; margin: 0; }
+  body > *:not(#receipt-print-area) { display: none !important; }
+  #receipt-print-area {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #receipt-print-area * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+
+<!-- Hidden print-only area -->
+<div id="receipt-print-area" style="display:none;"></div>
+
+<!-- ── RECEIPT MODAL ── -->
+<div id="receipt-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeReceiptModal()">
+  <div style="background:#12151f;border:0.5px solid rgba(255,255,255,0.12);border-radius:18px;width:100%;max-width:500px;max-height:94vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px 16px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#dde2f0;letter-spacing:-.2px;">🧾 Payment Receipt</div>
+      <button onclick="closeReceiptModal()" style="background:rgba(255,255,255,0.06);border:none;color:#8a92ab;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <!-- Receipt preview (white card) -->
+    <div style="padding:20px 20px 0;">
+      <div id="receipt-preview-card" style="background:#fff;border-radius:10px;overflow:hidden;font-family:'Inter',Arial,sans-serif;color:#111;box-shadow:0 2px 16px rgba(0,0,0,0.18);"></div>
+    </div>
+    <!-- Action buttons -->
+    <div style="padding:16px 20px 20px;display:flex;gap:10px;">
+      <button id="receipt-print-btn" onclick="receiptDoPrint()" style="flex:1;padding:12px;border-radius:9px;border:none;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px;">🖨️ Print</button>
+      <button id="receipt-pdf-btn" onclick="receiptDoDownloadPDF()" style="flex:1;padding:12px;border-radius:9px;border:0.5px solid rgba(55,138,221,.4);background:rgba(55,138,221,0.1);color:#378ADD;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px;">⬇️ Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── RECEIPT / PAYMENT SLIP ────────────────────────────────────
+let _receiptCtx = null;
+
+function _buildReceiptData(vid, month) {
+  const v = vehicles.find(x => x.id === vid);
+  if (!v) return null;
+  const p = v.payments.find(x => x.month === month);
+  if (!p) return null;
+  const amount = p.paidAmount > 0 ? p.paidAmount : p.amount;
+  const paidOn = p.actualPaymentDate || p.paidDate || '—';
+  const statusLabel = p.paid === 'paid' ? 'Paid in Full' : p.paid === 'partial' ? 'Partial Payment' : p.paid.charAt(0).toUpperCase() + p.paid.slice(1);
+  const statusColor = p.paid === 'paid' ? '#1D9E75' : p.paid === 'partial' ? '#378ADD' : '#EF9F27';
+  const receiptNo = ('RCP-' + vid + '-' + month.replace(/\s/g,'')).toUpperCase();
+  const printedOn = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  const isPartial = p.amount && p.paidAmount && p.paidAmount < p.amount;
+  const rows = [
+    ['For Month',   month],
+    ['Driver',      v.driver],
+    ['Vehicle',     v.name + ' — ' + v.plate],
+    ['Due Date',    p.dueDate || '—'],
+    ['Paid On',     paidOn],
+    ['Printed On',  printedOn],
+  ];
+  return { v, p, amount, statusLabel, statusColor, receiptNo, isPartial, rows };
+}
+
+// Shared card HTML — used for modal preview AND the print area
+function _receiptHTML(d) {
+  const sc = d.statusColor;
+    const rowsHTML = d.rows.map(function(r, i) {
+    const bg = i % 2 === 0 ? 'background:#f8f9fc;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;' : '';
+    return '<tr style="' + bg + '">'
+      + '<td style="font-size:17px;color:#888;padding:16px 24px;border-bottom:1px solid #f0f0f0;width:42%;font-weight:400;">' + r[0] + '</td>'
+      + '<td style="font-size:17px;color:#1a1a1a;padding:16px 24px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">' + r[1] + '</td>'
+      + '</tr>';
+  }).join('');
+
+  return ''
+    /* ── Green header band ── */
+    + '<div style="background:#1D9E75;padding:36px 44px 32px;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;">'
+    +   '<div style="display:flex;align-items:flex-start;justify-content:space-between;">'
+    +     '<div>'
+    +       '<div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.4px;">KL Ledger</div>'
+    +       '<div style="font-size:16px;color:rgba(255,255,255,0.65);margin-top:4px;">Vehicle Rental Manager</div>'
+    +     '</div>'
+    +     '<div style="text-align:right;">'
+    +       '<div style="font-size:13px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Receipt</div>'
+    +       '<div style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.9);font-family:monospace;letter-spacing:.5px;">' + d.receiptNo + '</div>'
+    +     '</div>'
+    +   '</div>'
+    /* ── Amount block inside header ── */
+    +   '<div style="margin-top:30px;padding-top:26px;border-top:1px solid rgba(255,255,255,0.2);text-align:center;">'
+    +     '<div style="font-size:14px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Amount Received</div>'
+    +     '<div style="font-size:52px;font-weight:800;color:#fff;letter-spacing:-1px;">LKR ' + Math.round(d.amount).toLocaleString() + '</div>'
+    +     (d.isPartial ? '<div style="font-size:16px;color:rgba(255,255,255,0.6);margin-top:6px;">of LKR ' + Math.round(d.p.amount).toLocaleString() + ' due</div>' : '')
+    +     '<div style="margin-top:18px;">'
+    +       '<span style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:7px 28px;font-size:16px;font-weight:700;color:#fff;">' + d.statusLabel + '</span>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>'
+    /* ── Details table ── */
+    + '<div style="background:#fff;">'
+    +   '<table style="width:100%;border-collapse:collapse;">' + rowsHTML + '</table>'
+    + '</div>'
+    /* ── Footer ── */
+    + '<div style="background:#f8f9fc;padding:22px 44px;text-align:center;border-top:1px solid #eee;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;">'
+    +   '<div style="font-size:14px;color:#bbb;line-height:1.8;">Thank you for your payment · This is a computer-generated receipt</div>'
+    + '</div>';
+}
+
+function openReceiptOptions(vid, month) {
+  const d = _buildReceiptData(vid, month);
+  if (!d) { alert('Receipt data not found.'); return; }
+  _receiptCtx = { vid, month };
+  document.getElementById('receipt-preview-card').innerHTML = _receiptHTML(d);
+  document.getElementById('receipt-modal-overlay').style.display = 'flex';
+}
+
+function closeReceiptModal() {
+  document.getElementById('receipt-modal-overlay').style.display = 'none';
+}
+
+function receiptDoPrint() {
+  if (!_receiptCtx) return;
+  const d = _buildReceiptData(_receiptCtx.vid, _receiptCtx.month);
+  if (!d) return;
+  closeReceiptModal();
+  const area = document.getElementById('receipt-print-area');
+  // Full-page print layout: centred card with max-width, large and clean
+  area.innerHTML = ''
+    + '<div style="min-height:100vh;background:#fff;display:flex;align-items:center;justify-content:center;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;">'
+    + '<div style="width:100%;max-width:100%;font-family:Inter,Arial,sans-serif;border-radius:0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;">'
+    + _receiptHTML(d)
+    + '</div></div>';
+  area.style.display = 'block';
+  setTimeout(function() {
+    window.print();
+    setTimeout(function() { area.style.display = 'none'; area.innerHTML = ''; }, 1000);
+  }, 120);
+}
+
+function receiptDoDownloadPDF() {
+  if (!_receiptCtx) return;
+  const d = _buildReceiptData(_receiptCtx.vid, _receiptCtx.month);
+  if (!d) return;
+
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = 210, pageH = 297;
+    const ml = 20, mr = 20, contentW = pageW - ml - mr;
+    let y = 0;
+
+    // ── GREEN HEADER BAND ─────────────────────────────────
+    const headerH = 92;
+    doc.setFillColor(29, 158, 117);
+    doc.rect(0, 0, pageW, headerH, 'F');
+
+    // Brand name
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.text('KL Ledger', ml, 22);
+
+    // Tagline
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(200, 235, 220);
+    doc.text('Vehicle Rental Manager', ml, 31);
+
+    // RECEIPT label (right)
+    doc.setFontSize(9);
+    doc.setTextColor(180, 230, 210);
+    doc.text('RECEIPT', pageW - mr, 20, { align: 'right' });
+
+    // Receipt number
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(240, 255, 250);
+    doc.text(d.receiptNo, pageW - mr, 29, { align: 'right' });
+
+    // Divider inside header
+    doc.setDrawColor(255, 255, 255, 0.25);
+    doc.setLineWidth(0.4);
+    doc.line(ml, 37, pageW - mr, 37);
+
+    // Amount label
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(180, 230, 210);
+    doc.text('AMOUNT RECEIVED', pageW / 2, 47, { align: 'center' });
+
+    // Amount value
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(34);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LKR ' + Math.round(d.amount).toLocaleString(), pageW / 2, 62, { align: 'center' });
+
+    // Partial note
+    if (d.isPartial) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(180, 230, 210);
+      doc.text('of LKR ' + Math.round(d.p.amount).toLocaleString() + ' due', pageW / 2, 70, { align: 'center' });
+    }
+
+    // Status badge
+    const badgeTxt = d.statusLabel;
+    const badgeW = 60, badgeH = 10, badgeX = (pageW - badgeW) / 2;
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(badgeX, 75, badgeW, badgeH, 4, 4, 'D');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text(badgeTxt, pageW / 2, 81.5, { align: 'center' });
+
+    y = headerH + 12;
+
+    // ── DETAILS TABLE ─────────────────────────────────────
+    const rowH = 16;
+    d.rows.forEach(function(row, i) {
+      const label = row[0], val = String(row[1]);
+      // Alternating row bg
+      if (i % 2 === 0) {
+        doc.setFillColor(248, 249, 252);
+        doc.rect(ml, y - 10, contentW, rowH, 'F');
+      }
+      // Label
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(13);
+      doc.setTextColor(140, 140, 140);
+      doc.text(label, ml + 5, y);
+      // Value
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(26, 26, 26);
+      doc.text(val, pageW - mr - 5, y, { align: 'right' });
+      // Row bottom border
+      doc.setDrawColor(238, 238, 238);
+      doc.setLineWidth(0.3);
+      doc.line(ml, y + 5, pageW - mr, y + 5);
+      y += rowH;
+    });
+
+    y += 12;
+
+    // ── FOOTER ────────────────────────────────────────────
+    doc.setFillColor(248, 249, 252);
+    doc.rect(0, y - 6, pageW, 24, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(180, 180, 180);
+    doc.text('Thank you for your payment  ·  This is a computer-generated receipt', pageW / 2, y + 8, { align: 'center' });
+
+    // Green bottom accent bar
+    doc.setFillColor(29, 158, 117);
+    doc.rect(0, pageH - 8, pageW, 8, 'F');
+
+    doc.save('Receipt-' + d.receiptNo + '.pdf');
+  }
+
+  const btn = document.getElementById('receipt-pdf-btn');
+  if (window.jspdf) {
+    generate();
+  } else {
+    if (btn) { btn.textContent = '⏳ Loading…'; btn.disabled = true; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = function() {
+      if (btn) { btn.textContent = '⬇️ Download PDF'; btn.disabled = false; }
+      generate();
+    };
+    s.onerror = function() {
+      if (btn) { btn.textContent = '⬇️ Download PDF'; btn.disabled = false; }
+      alert('Could not load PDF library. Check your internet connection and try again.');
+    };
+    document.head.appendChild(s);
+  }
+}
 </script>
 </body>
 </html>
