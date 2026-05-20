@@ -772,9 +772,9 @@ body{transition:background .3s, color .2s;}
     <div class="page-body">
       <div class="kpi-row">
         <div class="kpi"><div class="kpi-label">Monthly revenue</div><div class="kpi-val g" id="ov-monthly">—</div><div class="kpi-sub">from all vehicles</div></div>
-        <div class="kpi"><div class="kpi-label">Collected this month</div><div class="kpi-val" id="ov-collected">—</div><div class="kpi-sub" id="ov-col-pct">—</div></div>
+        <div class="kpi"><div class="kpi-label">Collected last month</div><div class="kpi-val" id="ov-collected">—</div><div class="kpi-sub" id="ov-col-pct">—</div></div>
         <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-val r" id="ov-due">—</div><div class="kpi-sub" id="ov-due-veh">—</div></div>
-        <div class="kpi"><div class="kpi-label">Overdue vehicles</div><div class="kpi-val a" id="ov-overdue">—</div><div class="kpi-sub">need attention</div></div>
+        <div class="kpi"><div class="kpi-label">Overdue vehicles</div><div class="kpi-val a" id="ov-overdue">—</div><div class="kpi-sub" id="ov-overdue-sub">unpaid last month</div></div>
         <div class="kpi"><div class="kpi-label">Total profit</div><div class="kpi-val g" id="ov-profit">—</div><div class="kpi-sub">income minus expenses</div></div>
       </div>
       <div class="section-title">All vehicles</div>
@@ -830,7 +830,7 @@ body{transition:background .3s, color .2s;}
       <div class="kpi-row" id="rep-kpis"></div>
       <div class="report-grid">
         <div class="chart-card">
-          <h4>Per-vehicle breakdown — this month</h4>
+          <h4>Per-vehicle breakdown — last month</h4>
           <div class="bar-chart" id="rep-vehicle-bars"></div>
         </div>
         <div class="chart-card">
@@ -1747,7 +1747,7 @@ const typeEmoji = {Car:'🚗',Van:'🚐',Truck:'🚛',Bike:'🏍',Bus:'🚌'};
 const typeBg = {Car:'rgba(29,158,117,0.15)',Van:'rgba(55,138,221,0.15)',Truck:'rgba(226,75,74,0.12)',Bike:'rgba(239,159,39,0.15)',Bus:'rgba(83,74,183,0.15)'};
 const today = new Date();
 const todayStr = today.toISOString().split('T')[0];
-function curMonth(){return today.toLocaleString('default',{month:'short',year:'numeric'});}
+function curMonth(){const d=new Date(today.getFullYear(),today.getMonth()-1,1);return d.toLocaleString('default',{month:'short',year:'numeric'});}
 function monthLabel(d){return new Date(d).toLocaleString('default',{month:'short',year:'numeric'});}
 function daysDiff(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
 function ordinal(n){return n+(['th','st','nd','rd'][Math.min(n%10,3)]||'th');}
@@ -1833,14 +1833,14 @@ function renderOverview(){
   const collected=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='paid');return s+(p?p.paidAmount||p.amount:0);},0);
   const partialCollected=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&p.paid==='partial');return s+(p?p.paidAmount||0:0);},0);
   const due=rv.reduce((s,v)=>{const p=v.payments.find(p=>p.month===cm&&(p.paid==='pending'||p.paid==='overdue'));return s+(p?p.amount:0);},0);
-  const ov=rv.filter(v=>getStatus(v)==='overdue').length;
+  const ov=rv.filter(v=>{const p=v.payments.find(p=>p.month===cm);return !p||p.paid!=='paid';}).length;
   const colPct=monthly>0?Math.round((collected+partialCollected)/monthly*100):0;
   document.getElementById('ov-monthly').textContent=fmt(monthly);
   document.getElementById('ov-collected').textContent=fmt(collected+partialCollected);
   document.getElementById('ov-col-pct').textContent=colPct+'% of monthly target';
   document.getElementById('ov-due').textContent=fmt(due);
   document.getElementById('ov-due-veh').textContent=rv.filter(v=>{const p=v.payments.find(p=>p.month===cm&&p.paid!=='paid');return!!p;}).length+' vehicles pending';
-  document.getElementById('ov-overdue').textContent=ov;
+  const ovEl=document.getElementById('ov-overdue');ovEl.textContent=ov;ovEl.className='kpi-val '+(ov>0?'r':'g');document.getElementById('ov-overdue-sub').textContent='unpaid in '+cm;
   const totalIncome=rv.reduce((s,v)=>s+v.payments.filter(p=>p.paid==='paid').reduce((ss,p)=>ss+(p.paidAmount||p.amount),0),0);
   const totalExpenses=rv.reduce((s,v)=>s+(v.expenses||[]).filter(e=>e.paidBy!=='driver').reduce((ss,e)=>ss+e.amount,0),0);
   const totalProfit=totalIncome-totalExpenses;
@@ -1873,7 +1873,7 @@ function renderOverview(){
         ? `<div style="font-size:12px;color:var(--txt3);padding:8px 0;border-top:0.5px solid var(--bdr);">Personal use — not included in revenue reports</div>`
         : `<div class="fc-fee">${fmt(v.rent)}<span>${feeShort(v)}</span></div>
       <div class="fc-row"><span class="fc-row-label">Next due</span><span class="fc-row-val ${st==='overdue'?'r':st==='due'?'a':''}">${new Date(nd).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} (${dueStr})</span></div>
-      <div class="fc-row"><span class="fc-row-label">This month</span><span class="fc-row-val ${cp?.paid==='paid'?'g':cp?.paid==='partial'?'':cp?.paid==='overdue'?'r':'a'}">
+      <div class="fc-row"><span class="fc-row-label">Last month</span><span class="fc-row-val ${cp?.paid==='paid'?'g':cp?.paid==='partial'?'':cp?.paid==='overdue'?'r':'a'}">
         ${cp?.paid==='paid'?'Paid':cp?.paid==='partial'?fmt(cp.paidAmount||0)+' partial':'Unpaid'}
         ${fine>0?`<span class="fine-badge">+${fmt(fine)} fine</span>`:''}
       </span></div>
@@ -2174,8 +2174,8 @@ function renderReports(){
   const totalExpenses=rentalVehicles.reduce((s,v)=>s+(v.expenses||[]).reduce((ss,e)=>ss+e.amount,0),0);
   const ytd=getYTDData(rentalVehicles);const ytdTotal=ytd.reduce((s,m)=>s+m.collected,0);
   document.getElementById('rep-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-label">Expected this month</div><div class="kpi-val">${fmt(totalExpected)}</div></div>
-    <div class="kpi"><div class="kpi-label">Collected this month</div><div class="kpi-val g">${fmt(totalCollected)}</div><div class="kpi-sub">${totalExpected>0?Math.round(totalCollected/totalExpected*100):0}% of target</div></div>
+    <div class="kpi"><div class="kpi-label">Expected last month</div><div class="kpi-val">${fmt(totalExpected)}</div></div>
+    <div class="kpi"><div class="kpi-label">Collected last month</div><div class="kpi-val g">${fmt(totalCollected)}</div><div class="kpi-sub">${totalExpected>0?Math.round(totalCollected/totalExpected*100):0}% of target</div></div>
     <div class="kpi"><div class="kpi-label">Total expenses (all time)</div><div class="kpi-val r">${fmt(totalExpenses)}</div></div>
     <div class="kpi"><div class="kpi-label">YTD income</div><div class="kpi-val g">${fmt(ytdTotal)}</div><div class="kpi-sub">year to date</div></div>`;
   // per-vehicle bars
@@ -2773,7 +2773,7 @@ function buildVehiclePage(v){
           </div>
         </div>
         <div class="info-card">
-          <h4>This month — ${cm}</h4>
+          <h4>Last month — ${cm}</h4>
           <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-top:4px;">
             <div><div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">Status</div>
               <span class="status-pill ${cp?.paid==='paid'?'pill-active':cp?.paid==='partial'?'':'pill-overdue'}">${cp?.paid==='paid'?'Paid':cp?.paid==='partial'?`Partial — ${fmt(cp.paidAmount||0)}`:cp?.paid==='overdue'?'Overdue':'Unpaid'}</span>
